@@ -91,6 +91,8 @@ def get_dataset_data(start_date, end_date, start_offset):
         date_query = '(metadata_created:[{0}T00:00:00.000Z TO {1}T23:59:59.999Z] OR metadata_modified:[{0}T00:00:00.000Z TO {1}T23:59:59.999Z]) AND '.format(start_date, end_date)
     elif end_date:
         date_query = '(metadata_created:[* TO {0}T23:59:59.999Z] OR metadata_modified:[* TO {0}T23:59:59.999Z]) AND '.format(end_date)
+    elif start_date:
+        date_query = '(metadata_created:[{0}T00:00:00.000Z TO *] OR metadata_modified:[{0}T00:00:00.000Z TO *]) AND '.format(start_date)
 
     workflow_query = '(workflow_status:published OR workflow_status:archived)'
     data_dict = {
