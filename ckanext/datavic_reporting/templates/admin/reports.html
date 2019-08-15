@@ -1,0 +1,32 @@
+{% extends "admin/base.html" %}
+{% import 'macros/form.html' as form %}
+
+{% block primary_content_inner %}
+
+{% set years, current_year = h.admin_report_get_years() %}
+{% set months, current_month = h.admin_report_get_months() %}
+
+
+<form action="/ckan-admin/reports/general_date_range" method="get" class="form-horizontal">
+  <h3>General Report Date Range</h3>
+
+  {{ form.input('report_date_from', label=_('Date From'), type='date') }}
+
+  {{ form.input('report_date_to', label=_('Date To'), type='date') }}
+
+  <button class="btn btn-primary">Download</button>
+
+</form>
+
+<form action="/ckan-admin/reports/general_year_month" method="get" class="form-horizontal">
+  <h3>General Report Month of the Year</h3>
+
+  {{ form.select('report_date_year', label=_('Year'), options=years, selected=current_year) }}
+
+  {{ form.select('report_date_month', label=_('Month'), options=months, selected=current_month) }}
+
+  <button class="btn btn-primary">Download</button>
+
+</form>
+
+{% endblock %}
