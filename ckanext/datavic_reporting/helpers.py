@@ -1,5 +1,6 @@
 import ckan.plugins.toolkit as toolkit
 import ckan.model as model
+from model import GroupTreeNode
 import datetime
 import csv
 import calendar
@@ -18,7 +19,7 @@ def get_context():
     }
 
 
-def admin_report_get_years():
+def user_report_get_years():
     now = datetime.datetime.now()
     years = []
     current_year = int(now.strftime('%Y'))
@@ -30,7 +31,7 @@ def admin_report_get_years():
     return years, current_year
 
 
-def admin_report_get_months():
+def user_report_get_months():
     now = datetime.datetime.now()
     months = []
     for i in range(1, 13):
@@ -62,6 +63,76 @@ def get_report_date_range(year, month):
     return start_date, end_date
 
 
+def get_organization_list_for_user():
+    organisations = [{'value': '', 'text': 'All Organisations'}]
+    for organisation in toolkit.get_action('organization_list_for_user')(get_context(), {}):
+        organisations.append({'value': organisation.get(
+            'name'), 'text': organisation.get('display_name')})
+
+    return organisations
+
+
+def get_organisation(organisation_name):
+    return model.Group.get(organisation_name)
+
+
+def get_organisation_children(organisation_name):
+    organisation = get_organisation(organisation_name)
+    if not organisation:
+        return []
+    return organisation.get_children_group_hierarchy('organization')
+
+
+def get_organisation_children_names(organisation_name):
+    if not organisation_name:
+        return None
+    organisation_names = [organisation_name]
+    for group_id, group_name, group_title, parent_id in get_organisation_children(organisation_name):
+        organisation_names.append(group_name)
+
+    return organisation_names
+
+
+def get_organisation_node(organisation_name):
+    organisation = get_organisation(organisation_name)
+    if not organisation:
+        return None
+    nodes = {}
+    root_node = nodes[organisation.id] = GroupTreeNode({'id': '', 'title': 'All Sub Organisations'})
+
+    for group_id, group_name, group_title, parent_id in organisation.get_children_group_hierarchy('organization'):
+        node = GroupTreeNode({'id': group_name, 'title': group_title})
+        nodes[parent_id].add_child_node(node)
+        nodes[group_id] = node
+
+    return root_node
+
+
+def get_organisation_node_tree(organisation_name):
+    organisation_children = []
+    if not organisation_name:
+        return organisation_children
+    root_node = get_organisation_node(organisation_name)
+    if not root_node:
+        return organisation_children
+
+    buildOrganisationTree(organisation_children, root_node)
+    return organisation_children
+
+
+def buildOrganisationTree(organisation_tree, organisation, ansestors=0):
+    dashes = '-' * ansestors
+    text = dashes + str(organisation['title'])
+    tree_node = {'value': organisation['id'], 'text': text}
+    organisation_tree.append(tree_node)
+    if len(organisation['children']) > 0:
+        ansestors += 1
+        for child_organisation in organisation['children']:
+            buildOrganisationTree(organisation_tree, child_organisation, ansestors)
+    else:
+        ansestors = 0
+
+
 def value(dataset_dict, field):
     value = dataset_dict.get(field, '')
     return value.encode('ascii', 'ignore') if value else ''
@@ -85,18 +156,22 @@ def get_package_search(data_dict):
         return None
 
 
-def get_dataset_data(start_date, end_date, start_offset):
+def get_dataset_data(start_date, end_date, start_offset, organisation_names):
     date_query = ''
     if start_date and end_date:
-        date_query = '(metadata_created:[{0}T00:00:00.000Z TO {1}T23:59:59.999Z] OR metadata_modified:[{0}T00:00:00.000Z TO {1}T23:59:59.999Z]) AND '.format(start_date, end_date)
+        date_query = '(metadata_created:[{0}T00:00:00.000Z TO {1}T23:59:59.999Z] OR metadata_modified:[{0}T00:00:00.000Z TO {1}T23:59:59.999Z]) AND '
+                        .format(start_date, end_date)
     elif end_date:
-        date_query = '(metadata_created:[* TO {0}T23:59:59.999Z] OR metadata_modified:[* TO {0}T23:59:59.999Z]) AND '.format(end_date)
+        date_query = '(metadata_created:[* TO {0}T23:59:59.999Z] OR metadata_modified:[* TO {0}T23:59:59.999Z]) AND '
+                        .format(end_date)
     elif start_date:
-        date_query = '(metadata_created:[{0}T00:00:00.000Z TO *] OR metadata_modified:[{0}T00:00:00.000Z TO *]) AND '.format(start_date)
+        date_query = '(metadata_created:[{0}T00:00:00.000Z TO *] OR metadata_modified:[{0}T00:00:00.000Z TO *]) AND '
+                        .format(start_date)
 
     workflow_query = '(workflow_status:published OR workflow_status:archived)'
+    organisation_query = ' AND (organization:{0})'.format(' OR organization:'.join(map(str, organisation_names))) if organisation_names else ''
     data_dict = {
-        'q': '{0} {1}'.format(date_query, workflow_query),
+        'q': '{0} {1} {2}'.format(date_query, workflow_query, organisation_query),
         'sort': 'metadata_created asc, metadata_modified asc',
         'include_private': True,
         'start': start_offset,
@@ -105,10 +180,10 @@ def get_dataset_data(start_date, end_date, start_offset):
     return get_package_search(data_dict)
 
 
-def get_general_report_data(csv_writer, start_date, end_date, start_offset):
+def get_general_report_data(csv_writer, start_date, end_date, start_offset, organisation_names):
     total_results_found = 0
 
-    dataset_data = get_dataset_data(start_date, end_date, start_offset)
+    dataset_data = get_dataset_data(start_date, end_date, start_offset, organisation_names)
     if dataset_data:
         total_results_found = dataset_data['count']
         write_csv_row(csv_writer, dataset_data['results'])
@@ -127,7 +202,7 @@ def write_csv_row(csv_writer, dataset_list):
                        if 'organization' in dataset_dict and dataset_dict['organization'] != None else '')
             row.append(', '.join([value(group, 'title')
                                   for group in dataset_dict['groups']])
-                                    if 'groups' in dataset_dict and dataset_dict['groups'] != None else '')
+                       if 'groups' in dataset_dict and dataset_dict['groups'] != None else '')
             row.append(value(dataset_dict, 'agency_program'))
             row.append('No' if dataset_dict.get('private', False) else 'Yes')
             row.append(value(dataset_dict, 'workflow_status'))
@@ -152,7 +227,7 @@ def write_csv_row(csv_writer, dataset_list):
                 csv_writer.writerow(row + res_list)
 
 
-def generate_general_report(filename, start_date, end_date):
+def generate_general_report(filename, start_date, end_date, organisation):
     csv_writer = csv.writer(open('/tmp/' + filename, 'wb'))
 
     header = [
@@ -176,8 +251,8 @@ def generate_general_report(filename, start_date, end_date):
     csv_writer.writerow(header)
     start_date = format_date(start_date)
     end_date = format_date(end_date)
-    total_results_found = get_general_report_data(
-        csv_writer, start_date, end_date, 0)
+    organisation_names = get_organisation_children_names(organisation)
+    total_results_found = get_general_report_data(csv_writer, start_date, end_date, 0, organisation_names)
     # package_search is hard coded to only return the first 1000 datasets and cannot be changed to return anymore
     # So if there is a large date range which returns over a 1000 datasets we will need to loop through to get the remaining datasets
     if total_results_found > 1000:
@@ -187,4 +262,4 @@ def generate_general_report(filename, start_date, end_date):
         stop = int(math.ceil(total_results_found / 1000.0) * step)
 
         for start_offset in range(start, stop, step):
-            get_general_report_data(csv_writer, start_date, end_date, start_offset)
+            get_general_report_data(csv_writer, start_date, end_date, start_offset, organisation_names)
