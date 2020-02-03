@@ -41,5 +41,5 @@ class DataVicReportingPlugin(p.SingletonPlugin):
         return {
             'user_report_get_years': helpers.user_report_get_years,
             'user_report_get_months': helpers.user_report_get_months,
-            'user_report_get_organisations': helpers.get_organization_list_for_user,
+            'user_report_get_organisations': helpers.get_top_level_organisation_list_for_user,
         }

@@ -63,11 +63,10 @@ def get_report_date_range(year, month):
     return start_date, end_date
 
 
-def get_organization_list_for_user():
+def get_top_level_organisation_list_for_user():
     organisations = [{'value': '', 'text': 'All Organisations'}]
-    for organisation in toolkit.get_action('organization_list_for_user')(get_context(), {}):
-        organisations.append({'value': organisation.get(
-            'name'), 'text': organisation.get('display_name')})
+    for organisation in model.Group.get_top_level_groups('organization'):
+        organisations.append({'value': organisation.name, 'text': organisation.display_name})
 
     return organisations
 
@@ -159,14 +158,11 @@ def get_package_search(data_dict):
 def get_dataset_data(start_date, end_date, start_offset, organisation_names):
     date_query = ''
     if start_date and end_date:
-        date_query = '(metadata_created:[{0}T00:00:00.000Z TO {1}T23:59:59.999Z] OR metadata_modified:[{0}T00:00:00.000Z TO {1}T23:59:59.999Z]) AND '
-                        .format(start_date, end_date)
+        date_query = '(metadata_created:[{0}T00:00:00.000Z TO {1}T23:59:59.999Z] OR metadata_modified:[{0}T00:00:00.000Z TO {1}T23:59:59.999Z]) AND '.format(start_date, end_date)
     elif end_date:
-        date_query = '(metadata_created:[* TO {0}T23:59:59.999Z] OR metadata_modified:[* TO {0}T23:59:59.999Z]) AND '
-                        .format(end_date)
+        date_query = '(metadata_created:[* TO {0}T23:59:59.999Z] OR metadata_modified:[* TO {0}T23:59:59.999Z]) AND '.format(end_date)
     elif start_date:
-        date_query = '(metadata_created:[{0}T00:00:00.000Z TO *] OR metadata_modified:[{0}T00:00:00.000Z TO *]) AND '
-                        .format(start_date)
+        date_query = '(metadata_created:[{0}T00:00:00.000Z TO *] OR metadata_modified:[{0}T00:00:00.000Z TO *]) AND '.format(start_date)
 
     workflow_query = '(workflow_status:published OR workflow_status:archived)'
     organisation_query = ' AND (organization:{0})'.format(' OR organization:'.join(map(str, organisation_names))) if organisation_names else ''
