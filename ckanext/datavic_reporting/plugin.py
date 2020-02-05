@@ -13,18 +13,25 @@ class DataVicReportingPlugin(p.SingletonPlugin):
     def update_config(self, config_):
         toolkit.add_template_directory(config_, 'templates')
         toolkit.add_public_directory(config_, 'public')
-        toolkit.add_resource('fanstatic', 'datavic-reporting')
-        toolkit.add_ckan_admin_tab(config_, 'ckanadmin_reports', 'Reports')
+        toolkit.add_resource('fanstatic', 'datavic_reporting')
 
     # IRoutes
     def before_map(self, map):
         # Reporting mappings
-        map.connect('ckanadmin_reports', '/ckan-admin/reports',
-                    controller='ckanext.datavic_reporting.controller:ReportingAdminController', action='admin')
-        map.connect('ckanadmin_reports_general_year_month', '/ckan-admin/reports/general_year_month',
-                    controller='ckanext.datavic_reporting.controller:ReportingController', action='reports_general_year_month')
-        map.connect('ckanadmin_reports_general_date_range', '/ckan-admin/reports/general_date_range',
-                    controller='ckanext.datavic_reporting.controller:ReportingController', action='reports_general_date_range')
+        map.connect('user_dashboard_reports', '/dashboard/reports',
+                    controller='ckanext.datavic_reporting.controller:ReportingController',
+                    action='reports',
+                    ckan_icon='file')
+        map.connect('user_reports_general_year_month', '/user/reports/general_year_month',
+                    controller='ckanext.datavic_reporting.controller:ReportingController',
+                    action='reports_general_year_month')
+        map.connect('user_reports_general_date_range', '/user/reports/general_date_range',
+                    controller='ckanext.datavic_reporting.controller:ReportingController',
+                    action='reports_general_date_range')
+        map.connect('user_reports_sub_organisations', '/user/reports/sub_organisations',
+                    controller='ckanext.datavic_reporting.controller:ReportingController',
+                    action='reports_sub_organisations')
+
         return map
 
     def get_helpers(self):
@@ -32,6 +39,7 @@ class DataVicReportingPlugin(p.SingletonPlugin):
         These helpers will be available under the 'h' thread-local global object.
         '''
         return {
-            'admin_report_get_years': helpers.admin_report_get_years,
-            'admin_report_get_months': helpers.admin_report_get_months,
+            'user_report_get_years': helpers.user_report_get_years,
+            'user_report_get_months': helpers.user_report_get_months,
+            'user_report_get_organisations': helpers.get_top_level_organisation_list_for_user,
         }
