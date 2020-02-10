@@ -1,27 +1,25 @@
 import ckan.lib.base as base
-import ckan.authz as authz
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
-import helpers
-from pylons import response
 from ckan.common import _
+from pylons import response
 from datetime import datetime
 import json
+import helpers
+import authorisation
 
 abort = base.abort
 
 
 class ReportingController(base.BaseController):
     @classmethod
-    def check_sysadmin_access(cls):
-        # Only sysadmin users can generate reports
-        user = toolkit.c.userobj
-        if not user or not authz.is_sysadmin(user.name):
+    def check_user_access(cls):
+        user_dashboard_reports = authorisation.user_dashboard_reports(helpers.get_context())
+        if not user_dashboard_reports or not user_dashboard_reports.get('success'):
             abort(403, _('You are not permitted to perform this action.'))
 
     @classmethod
     def general_report(cls, start_date, end_date, organisation):
-
         # Generate a CSV report
         filename = 'general_report_{0}.csv'.format(datetime.now().isoformat())
         helpers.generate_general_report(filename, start_date, end_date, organisation)
@@ -38,14 +36,14 @@ class ReportingController(base.BaseController):
         return fh.read()
 
     def reports(self):
-        self.check_sysadmin_access()
+        self.check_user_access()
         vars = {}
 
         return base.render('user/reports.html',
                            extra_vars=vars)
 
     def reports_general_year_month(self):
-        self.check_sysadmin_access()
+        self.check_user_access()
 
         year, month = helpers.get_year_month(
             toolkit.request.GET.get('report_date_year', None),
@@ -59,7 +57,7 @@ class ReportingController(base.BaseController):
         return self.general_report(start_date, end_date, sub_organisation or organisation)
 
     def reports_general_date_range(self):
-        self.check_sysadmin_access()
+        self.check_user_access()
 
         start_date = toolkit.request.GET.get('report_date_from', None)
         end_date = toolkit.request.GET.get('report_date_to', None)
@@ -69,7 +67,7 @@ class ReportingController(base.BaseController):
         return self.general_report(start_date, end_date, sub_organisation or organisation)
 
     def reports_sub_organisations(self):
-        self.check_sysadmin_access()
+        self.check_user_access()
 
         organisation_id = toolkit.request.GET.get('organisation_id', None)
 
