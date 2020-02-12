@@ -1,14 +1,10 @@
 import ckan.lib.base as base
-import ckan.model as model
 import ckan.plugins.toolkit as toolkit
-from ckan.common import _
 from pylons import response
 from datetime import datetime
 import json
 import helpers
 import authorisation
-
-abort = base.abort
 
 
 class ReportingController(base.BaseController):
@@ -16,7 +12,7 @@ class ReportingController(base.BaseController):
     def check_user_access(cls):
         user_dashboard_reports = authorisation.user_dashboard_reports(helpers.get_context())
         if not user_dashboard_reports or not user_dashboard_reports.get('success'):
-            abort(403, _('You are not permitted to perform this action.'))
+            toolkit.NotAuthorized(403, toolkit._('You are not Authorized'))
 
     @classmethod
     def general_report(cls, start_date, end_date, organisation):
@@ -62,9 +58,9 @@ class ReportingController(base.BaseController):
         start_date = toolkit.request.GET.get('report_date_from', None)
         end_date = toolkit.request.GET.get('report_date_to', None)
         organisation = toolkit.request.GET.get('organisation', None)
-        sub_organisation = toolkit.request.GET.get('sub_organisation', None)
+        sub_organisation = toolkit.request.GET.get('sub_organisation', 'all-sub-organisations')
 
-        return self.general_report(start_date, end_date, sub_organisation or organisation)
+        return self.general_report(start_date, end_date, organisation if sub_organisation == 'all-sub-organisations' else sub_organisation)
 
     def reports_sub_organisations(self):
         self.check_user_access()
