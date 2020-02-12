@@ -10,11 +10,12 @@ def is_sysadmin():
     user = helpers.get_user()
     return user and authz.is_sysadmin(user.name)
 
+
 def has_user_permission_for_some_org(user_name, permission):
     return authz.has_user_permission_for_some_org(user_name, permission)
 
+
 def user_dashboard_reports(context, data_dict=None):
-    log.debug('user_dashboard_reports')
     user = helpers.get_user()
     if not user:
         {'success': False, 'msg': 'Only logged in users can view reports.'}

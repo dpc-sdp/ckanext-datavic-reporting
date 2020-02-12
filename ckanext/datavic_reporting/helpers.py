@@ -97,8 +97,8 @@ def get_organisation_list_for_user(permission):
     try:
         return toolkit.get_action('organization_list_for_user')(get_context(), {'permission': permission})
     except Exception as e:
-        log.debug('*** Failed to retrieve organization_list_for_user {0}'.format(get_username()))
-        log.debug(e)
+        log.error('*** Failed to retrieve organization_list_for_user {0}'.format(get_username()))
+        log.error(e)
         return []
 
 
@@ -203,9 +203,8 @@ def get_package_search(data_dict):
     try:
         return toolkit.get_action('package_search')(get_context(), data_dict)
     except Exception as e:
-        log.debug(
-            '*** Failed to retrieve package_search query {0}'.format(data_dict))
-        log.debug(e)
+        log.error('*** Failed to retrieve package_search query {0}'.format(data_dict))
+        log.error(e)
         return None
 
 
