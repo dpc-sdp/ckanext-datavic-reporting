@@ -21,7 +21,8 @@ jQuery(document).ready(function () {
                 $(data).each(function () {
                     $("<option />", {
                         val: this.value,
-                        text: this.text
+                        text: this.text,
+                        disabled: this.has_access == false
                     }).appendTo(sub_organisations);
                 });
                 sub_organisations.parent().parent().show();
