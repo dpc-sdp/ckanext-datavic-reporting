@@ -48,9 +48,9 @@ class ReportingController(base.BaseController):
 
         start_date, end_date = helpers.get_report_date_range(year, month)
         organisation = toolkit.request.GET.get('organisation', None)
-        sub_organisation = toolkit.request.GET.get('sub_organisation', None)
+        sub_organisation = toolkit.request.GET.get('sub_organisation', 'all-sub-organisations')
 
-        return self.general_report(start_date, end_date, sub_organisation or organisation)
+        return self.general_report(start_date, end_date, organisation if sub_organisation == 'all-sub-organisations' else sub_organisation)
 
     def reports_general_date_range(self):
         self.check_user_access()
