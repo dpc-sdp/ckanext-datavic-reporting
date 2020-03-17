@@ -1,5 +1,7 @@
 import ckan.plugins.toolkit as toolkit
 import ckan.model as model
+from ckan.lib.navl.dictization_functions import unflatten
+from ckan.logic import clean_dict, tuplize_dict, parse_params
 from model import GroupTreeNode
 import datetime
 import csv
@@ -313,3 +315,7 @@ def generate_general_report(filename, start_date, end_date, organisation):
 
         for start_offset in range(start, stop, step):
             get_general_report_data(csv_writer, start_date, end_date, start_offset, organisation_names)
+
+
+def clean_params(params):
+    return clean_dict(unflatten(tuplize_dict(parse_params(params))))

@@ -42,6 +42,22 @@ class DataVicReportingPlugin(p.SingletonPlugin):
         map.connect('user_reports_sub_organisations', '/user/reports/sub_organisations',
                     controller='ckanext.datavic_reporting.controller:ReportingController',
                     action='reports_sub_organisations')
+        # Scheduled report mappings
+        map.connect('scheduled_report_create', '/user/scheduled_report/create',
+                    controller='ckanext.datavic_reporting.controller:ScheduledReportController',
+                    action='create')
+        map.connect('scheduled_report_update', '/user/scheduled_report/update/{id}',
+                    controller='ckanext.datavic_reporting.controller:ScheduledReportController',
+                    action='update')
+        map.connect('scheduled_report_delete', '/user/scheduled_report/delete/{id}',
+                    controller='ckanext.datavic_reporting.controller:ScheduledReportController',
+                    action='delete')
+        map.connect('scheduled_report_list', '/user/scheduled_report/list',
+                    controller='ckanext.datavic_reporting.controller:ScheduledReportController',
+                    action='list')
+        map.connect('scheduled_report_reports', '/user/scheduled_report/reports/{id}',
+                    controller='ckanext.datavic_reporting.controller:ScheduledReportController',
+                    action='reports')
 
         return map
 

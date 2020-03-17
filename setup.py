@@ -82,6 +82,9 @@ setup(
         [ckan.plugins]
         datavic_reporting=ckanext.datavic_reporting.plugin:DataVicReportingPlugin
 
+        [paste.paster_command]
+        initdb = ckanext.datavic_reporting.command:InitDB
+
         [babel.extractors]
         ckan = ckan.lib.extract:extract_ckan
     ''',
