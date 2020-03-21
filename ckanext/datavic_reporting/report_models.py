@@ -35,7 +35,8 @@ class ReportSchedule(object):
             'user_roles': self.user_roles,
             'emails': self.emails,
             'state': self.state,
-            'last_completed': self.last_completed.isoformat() if self.last_completed else ''
+            'last_completed': self.last_completed.isoformat() if self.last_completed else '',
+            'user_id': self.user_id
         }
 
 

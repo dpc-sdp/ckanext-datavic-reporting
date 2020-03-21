@@ -3,6 +3,7 @@ import ckan.plugins.toolkit as toolkit
 import helpers
 import authorisation
 import logging
+import validators
 
 log = logging.getLogger(__name__)
 
@@ -12,6 +13,8 @@ class DataVicReportingPlugin(p.SingletonPlugin):
     p.implements(p.IAuthFunctions)
     p.implements(p.IRoutes, inherit=True)
     p.implements(p.ITemplateHelpers)
+    p.implements(p.IActions, inherit=True)
+    p.implements(p.IValidators, inherit=True)
 
     # IConfigurer
 
@@ -24,6 +27,11 @@ class DataVicReportingPlugin(p.SingletonPlugin):
     def get_auth_functions(self):
         return {
             'user_dashboard_reports': authorisation.user_dashboard_reports,
+            'report_schedule_create': authorisation.report_schedule_create,
+            'report_schedule_update': authorisation.report_schedule_update,
+            'report_schedule_delete': authorisation.report_schedule_delete,
+            'report_schedule_list': authorisation.report_schedule_list,
+            'reports_list': authorisation.reports_list,
         }
 
     # IRoutes
@@ -42,22 +50,6 @@ class DataVicReportingPlugin(p.SingletonPlugin):
         map.connect('user_reports_sub_organisations', '/user/reports/sub_organisations',
                     controller='ckanext.datavic_reporting.controller:ReportingController',
                     action='reports_sub_organisations')
-        # Scheduled report mappings
-        map.connect('scheduled_report_create', '/user/scheduled_report/create',
-                    controller='ckanext.datavic_reporting.controller:ScheduledReportController',
-                    action='create')
-        map.connect('scheduled_report_update', '/user/scheduled_report/update/{id}',
-                    controller='ckanext.datavic_reporting.controller:ScheduledReportController',
-                    action='update')
-        map.connect('scheduled_report_delete', '/user/scheduled_report/delete/{id}',
-                    controller='ckanext.datavic_reporting.controller:ScheduledReportController',
-                    action='delete')
-        map.connect('scheduled_report_list', '/user/scheduled_report/list',
-                    controller='ckanext.datavic_reporting.controller:ScheduledReportController',
-                    action='list')
-        map.connect('scheduled_report_reports', '/user/scheduled_report/reports/{id}',
-                    controller='ckanext.datavic_reporting.controller:ScheduledReportController',
-                    action='reports')
 
         return map
 
@@ -71,3 +63,26 @@ class DataVicReportingPlugin(p.SingletonPlugin):
             'user_report_get_months': helpers.user_report_get_months,
             'user_report_get_organisations': helpers.get_organisation_list,
         }
+
+    # IActions
+    def get_actions(self):
+        from ckanext.datavic_reporting.logic.action import create, update, delete, get
+
+        return {
+            "report_schedule_create": create.report_schedule_create,
+            "report_schedule_update": update.report_schedule_update,
+            "report_schedule_delete": delete.report_schedule_delete,
+            "report_schedule_list": get.report_schedule_list,
+            "reports_list": get.reports_list,
+        }
+
+    # IValidators
+    def get_validators(self):
+        return {
+            "report_type_validator": validators.report_type_validator,
+            "sub_org_ids_validator": validators.sub_org_ids_validator,
+            "frequency_validator": validators.frequency_validator,
+            "user_roles_validator": validators.user_roles_validator,
+            "emails_validator": validators.emails_validator,
+        }
+

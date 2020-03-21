@@ -29,3 +29,33 @@ def user_dashboard_reports(context, data_dict=None):
         return {'success': True}
 
     return {'success': False, 'msg': 'Only user level admin or above can view reports.'}
+
+
+def report_schedule_create(context, data_dict):
+    if is_sysadmin():
+        return {'success': True}
+    return {'success': False, 'msg': 'Only sysadmin user level can create report schedules.'}
+
+
+def report_schedule_update(context, data_dict):
+    if is_sysadmin():
+        return {'success': True}
+    return {'success': False, 'msg': 'Only sysadmin user level can update report schedules.'}
+
+
+def report_schedule_delete(context, data_dict):
+    if is_sysadmin():
+        return {'success': True}
+    return {'success': False, 'msg': 'Only sysadmin user level can delete report schedules.'}
+
+
+def report_schedule_list(context, data_dict):
+    if is_sysadmin():
+        return {'success': True}
+    return {'success': False, 'msg': 'Only sysadmin user level can view report schedules.'}
+
+
+def reports_list(context, data_dict):
+    if is_sysadmin():
+        return {'success': True}
+    return {'success': False, 'msg': 'Only sysadmin user level can view report.'}
