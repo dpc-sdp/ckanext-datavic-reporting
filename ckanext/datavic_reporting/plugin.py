@@ -51,6 +51,11 @@ class DataVicReportingPlugin(p.SingletonPlugin):
                     controller='ckanext.datavic_reporting.controller:ReportingController',
                     action='reports_sub_organisations')
 
+        map.connect('user_report_schedules', '/dashboard/report-schedules',
+                    controller='ckanext.datavic_reporting.controller:ReportScheduleController',
+                    action='schedules',
+                    ckan_icon='file')
+
         return map
 
     # ITemplateHelpers
