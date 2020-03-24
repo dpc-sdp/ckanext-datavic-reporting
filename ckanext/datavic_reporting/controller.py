@@ -68,3 +68,13 @@ class ReportingController(base.BaseController):
         organisation_id = toolkit.request.GET.get('organisation_id', None)
 
         return json.dumps(helpers.get_organisation_node_tree(organisation_id))
+
+
+class ReportScheduleController(base.BaseController):
+    def schedules(self):
+        # TODO: Check user access
+        #self.check_user_access()
+        vars = {}
+
+        return base.render('user/report_schedules.html',
+                           extra_vars=vars)

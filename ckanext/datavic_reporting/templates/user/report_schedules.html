@@ -1,0 +1,60 @@
+{% extends "user/dashboard.html" %}
+{% import 'macros/form.html' as form %}
+
+{% block primary_content_inner %}
+
+{% set years, current_year = h.user_report_get_years() %}
+{% set months, current_month = h.user_report_get_months() %}
+{% set organisations = h.user_report_get_organisations() %}
+{% resource 'datavic_reporting/datavic_reporting.js' %}
+
+<div id="datavic_reporting">
+  <form action="/user/report_schedule/create" method="get" class="form-horizontal">
+    <h3>Create report schedule</h3>
+
+    {{ form.select(
+      name='report_type',
+      id='report_schedule_report_type',
+      label=_('Report type'),
+      options=[
+        {'text': 'General Report', 'value': 'general'}
+      ],
+      selected=data.report_type if data else 'general',
+      error=errors.report_type if errors else None
+    ) }}
+
+    {{ form.select('organisation', id='general_date_range_organisations', label=_('Organisations'), options=organisations) }}
+
+    {{ form.select('sub_organisation', id='general_date_range_sub_organisations', label=_('Sub Organisations')) }}
+
+    {{ form.select(
+      name='frequency',
+      id='report_schedule_frequency',
+      label=_('Frequency'),
+      options=[
+        {'text': 'Monthly', 'value': 'monthly'},
+        {'text': 'Financial year', 'value': 'yearly'}
+      ],
+      selected=data.frequency if data else 'monthly',
+      error=errors.frequency if errors else None
+    ) }}
+
+    {{ form.select(
+      name='user_roles',
+      id='report_schedule_user_roles',
+      label=_('User role'),
+      options=[
+        {'text': 'Admin', 'value': 'admin'},
+        {'text': 'Editor', 'value': 'editor'}
+      ],
+      selected=data.user_roles if data else 'admin',
+      error=errors.user_roles if errors else None
+    ) }}
+
+    {{ form.textarea('emails', label=_('Emails'), value=data.emails if data else None, error=errors.emails if errors else None) }}
+
+    <button class="btn btn-primary">Create</button>
+
+  </form>
+</div>
+{% endblock %}
