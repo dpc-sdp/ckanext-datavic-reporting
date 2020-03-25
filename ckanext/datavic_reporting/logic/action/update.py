@@ -25,7 +25,7 @@ def report_schedule_update(context, data_dict):
 
                 # Validate data_dict inputs - see validators.py for implementations
                 toolkit.get_validator('report_type_validator')(schedule.report_type)
-                toolkit.get_validator('group_id_exists')(schedule.org_id, context)
+                toolkit.get_validator('group_id_or_name_exists')(schedule.org_id, context)
                 toolkit.get_validator('sub_org_ids_validator')(schedule.sub_org_ids, context)
                 toolkit.get_validator('frequency_validator')(schedule.frequency)
                 toolkit.get_validator('user_roles_validator')(schedule.user_roles, context)

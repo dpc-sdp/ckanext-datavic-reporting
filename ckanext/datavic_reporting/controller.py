@@ -10,6 +10,7 @@ import helpers
 import authorisation
 
 c = toolkit.c
+h = base.h
 request = base.request
 
 
@@ -77,6 +78,10 @@ class ReportingController(base.BaseController):
 
 
 class ReportScheduleController(base.BaseController):
+    def _get_context(self):
+        return {'model': model, 'session': model.Session,
+                'user': c.user, 'auth_user_obj': c.userobj}
+
     def schedules(self):
         # TODO: Check user access
         #self.check_user_access()
@@ -84,3 +89,43 @@ class ReportScheduleController(base.BaseController):
 
         return base.render('user/report_schedules.html',
                            extra_vars=vars)
+
+    def create(self):
+        vars = {}
+        if request.method == 'POST':
+            params = helpers.clean_params(request.POST)
+            result = toolkit.get_action('report_schedule_create')(self._get_context(), params)
+            from pprint import pprint
+            pprint(result)
+            # handle success
+            if result is True:
+                h.flash_success('Report schedule created')
+                h.redirect_to('/dashboard/report-schedules')
+            # handle errors
+            elif result and result.get('error', None):
+                vars['data'] = params
+                errors = result.get('error', None)
+                if 'group name' in errors:
+                    vars['errors'] = {
+                        'org_id': "what"
+                    }
+                h.flash_error(str(errors))
+
+        return base.render('user/report_schedules.html',
+                           extra_vars=vars)
+
+    def update(self):
+        vars = {}
+        return base.render('user/report_schedules.html',
+                           extra_vars=vars)
+
+    def delete(self, id=None):
+        result = toolkit.get_action('report_schedule_delete')(self._get_context(), {'id': id})
+        if result:
+            h.flash_success('Report schedule deleted')
+        else:
+            h.flash_error('Error')
+        h.redirect_to('/dashboard/report-schedules')
+        # vars = {}
+        # return base.render('user/report_schedules.html',
+        #                    extra_vars=vars)

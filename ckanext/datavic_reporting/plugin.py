@@ -51,10 +51,17 @@ class DataVicReportingPlugin(p.SingletonPlugin):
                     controller='ckanext.datavic_reporting.controller:ReportingController',
                     action='reports_sub_organisations')
 
+        # Scheduled reports
         map.connect('user_report_schedules', '/dashboard/report-schedules',
                     controller='ckanext.datavic_reporting.controller:ReportScheduleController',
                     action='schedules',
                     ckan_icon='file')
+        map.connect('user_report_schedule_create', '/dashboard/report-schedule/create',
+                    controller='ckanext.datavic_reporting.controller:ReportScheduleController',
+                    action='create')
+        map.connect('user_report_schedule_delete', '/dashboard/report-schedule/delete/{id}',
+                    controller='ckanext.datavic_reporting.controller:ReportScheduleController',
+                    action='delete')
 
         return map
 
@@ -67,6 +74,8 @@ class DataVicReportingPlugin(p.SingletonPlugin):
             'user_report_get_years': helpers.user_report_get_years,
             'user_report_get_months': helpers.user_report_get_months,
             'user_report_get_organisations': helpers.get_organisation_list,
+            'get_report_schedules': helpers.get_report_schedules,
+            'get_report_schedule_organisation_list': helpers.get_report_schedule_organisation_list,
         }
 
     # IActions
@@ -85,6 +94,7 @@ class DataVicReportingPlugin(p.SingletonPlugin):
     def get_validators(self):
         return {
             "report_type_validator": validators.report_type_validator,
+            "org_id_validator": validators.org_id_validator,
             "sub_org_ids_validator": validators.sub_org_ids_validator,
             "frequency_validator": validators.frequency_validator,
             "user_roles_validator": validators.user_roles_validator,

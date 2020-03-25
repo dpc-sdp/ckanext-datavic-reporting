@@ -5,12 +5,14 @@
 
 {% set years, current_year = h.user_report_get_years() %}
 {% set months, current_month = h.user_report_get_months() %}
-{% set organisations = h.user_report_get_organisations() %}
+{% set organisations = h.get_report_schedule_organisation_list() %}
 {% resource 'datavic_reporting/datavic_reporting.js' %}
 
 <div id="datavic_reporting">
-  <form action="/user/report_schedule/create" method="get" class="form-horizontal">
+  <form action="/dashboard/report-schedule/create" method="post" class="form-horizontal">
     <h3>Create report schedule</h3>
+
+    {{ errors }}
 
     {{ form.select(
       name='report_type',
@@ -23,9 +25,14 @@
       error=errors.report_type if errors else None
     ) }}
 
-    {{ form.select('organisation', id='general_date_range_organisations', label=_('Organisations'), options=organisations) }}
+    {{ form.select(
+      'org_id',
+      id='general_date_range_organisations',
+      label=_('Organisations'), options=organisations,
+      error=errors.org_id if errors and errors.org_id else None
+    ) }}
 
-    {{ form.select('sub_organisation', id='general_date_range_sub_organisations', label=_('Sub Organisations')) }}
+    {{ form.select('sub_org_ids', id='general_date_range_sub_organisations', label=_('Sub Organisations')) }}
 
     {{ form.select(
       name='frequency',
@@ -56,5 +63,70 @@
     <button class="btn btn-primary">Create</button>
 
   </form>
+</div>
+
+<hr />
+<div>
+  <h3>Reports scheduled</h3>
+  {% set schedules = h.get_report_schedules() %}
+  {% if not schedules %}
+    <p>There are no reports scheduled.</p>
+  {% else %}
+    <small>
+    <table class="table table-bordered table-striped table-condensed">
+      <thead>
+        <tr>
+          <th>Report type</th>
+          <th>Organisation</th>
+          <th>Sub-organisations</th>
+          <th>Frequency</th>
+          <th>User role</th>
+          <th>Emails</th>
+          <th>State</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for schedule in schedules %}
+        <tr>
+          <td>{{ schedule.report_type[0]|upper }}{{ schedule.report_type[1:] }}</td>
+          <td>
+            {% for org in organisations %}
+              {% if org.value == schedule.org_id %}
+                {{ org.text }}
+              {% endif %}
+            {% endfor %}
+          </td>
+          <td>
+            {% if schedule.sub_org_ids %}
+              {% set sub_org_ids = schedule.sub_org_ids.split(',') %}
+              {% for sub_org in sub_org_ids %}
+                {{ sub_org }}
+              {% endfor %}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          <td>{{ schedule.frequency[0]|upper }}{{ schedule.frequency[1:] }}</td>
+          <td>
+            {{ schedule.user_roles[0]|upper }}{{ schedule.user_roles[1:] }}
+          </td>
+          <td>
+            {% if schedule.emails %}
+              {{ schedule.emails }}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          <td>
+            {{ schedule.state[0]|upper }}{{ schedule.state[1:] }}
+          </td>
+          <td><a href="" class="btn btn-small btn-warning">Edit</a> <a href="/dashboard/report-schedule/delete/{{ schedule.id }}" class="btn btn-small btn-danger">Delete</a></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+      </small>
+  {% endif %}
 </div>
 {% endblock %}

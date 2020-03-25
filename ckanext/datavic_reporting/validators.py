@@ -3,15 +3,23 @@ from ckan.plugins.toolkit import Invalid
 
 
 def report_type_validator(report_type):
-    if report_type not in ['monthly', 'yearly']:
+    if report_type not in ['general']:
         raise Invalid('Invalid report_type')
     return report_type
+
+
+def org_id_validator(org_id, context):
+    try:
+        toolkit.get_validator('group_id_or_name_exists')(org_id, context)
+    except Exception:
+        return 'Invalid organisation'
+    return org_id
 
 
 def sub_org_ids_validator(sub_org_ids, context):
     sub_org_ids = sub_org_ids.split(',')
     for sub_org in sub_org_ids:
-        toolkit.get_validator('group_id_exists')(sub_org.strip(), context)
+        toolkit.get_validator('group_id_or_name_exists')(sub_org.strip(), context)
     return sub_org_ids
 
 

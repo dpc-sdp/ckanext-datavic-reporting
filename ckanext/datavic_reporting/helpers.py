@@ -319,3 +319,17 @@ def generate_general_report(filename, start_date, end_date, organisation):
 
 def clean_params(params):
     return clean_dict(unflatten(tuplize_dict(parse_params(params))))
+
+
+def get_report_schedules(state=None):
+    return toolkit.get_action('report_schedule_list')({}, {'state': state})
+
+
+def get_report_schedule_organisation_list():
+    organisations = []
+    top_level_organisations = get_top_level_organisation_list()
+    if authorisation.is_sysadmin():
+        organisations = top_level_organisations
+
+    organisations.insert(0, {'value': '', 'text': 'Please select'})
+    return organisations
