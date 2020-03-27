@@ -72,6 +72,7 @@ class ReportJob(object):
             'report_schedule_id': self.report_schedule_id,
             'timestamp': self.timestamp.isoformat(),
             'filename': self.filename,
+            'status': self.status,
         }
 
 

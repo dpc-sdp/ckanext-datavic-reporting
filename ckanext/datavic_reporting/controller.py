@@ -139,3 +139,13 @@ class ReportScheduleController(base.BaseController):
         # vars = {}
         # return base.render('user/report_schedules.html',
         #                    extra_vars=vars)
+
+    def jobs(self, report_schedule_id=None):
+        vars = {}
+
+        schedule = ReportSchedule.get(report_schedule_id)
+        if schedule:
+            vars['schedule'] = schedule.as_dict()
+            vars['jobs'] = toolkit.get_action('report_jobs')(self._get_context(), {'report_schedule_id': report_schedule_id})
+
+        return base.render('user/report_jobs.html', extra_vars=vars)

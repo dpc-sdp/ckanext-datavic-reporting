@@ -20,18 +20,18 @@ def report_schedule_list(context, data_dict):
 
 
 @side_effect_free
-def reports_list(context, data_dict):
+def report_jobs(context, data_dict):
     error = 'Invalid or no report schedule ID provided.'
 
-    id = data_dict.get('id', None)
+    report_schedule_id = data_dict.get('report_schedule_id', None)
 
     # Check to make sure `id` looks like a UUID
-    if id and model.is_id(id):
+    if report_schedule_id and model.is_id(report_schedule_id):
         try:
             # Check access - see authorisaton.py for implementation
-            toolkit.check_access('reports_list', context, {})
-            reports = model.Session.query(ReportJob).filter_by(report_schedule_id=id).all()
-            return [r.as_dict() for r in reports]
+            toolkit.check_access('report_jobs', context, {})
+            report_jobs = model.Session.query(ReportJob).filter_by(report_schedule_id=report_schedule_id).all()
+            return [r.as_dict() for r in report_jobs]
         except Exception, e:
             error = str(e)
 

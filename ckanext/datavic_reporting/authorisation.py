@@ -55,7 +55,7 @@ def report_schedule_list(context, data_dict):
     return {'success': False, 'msg': 'Only sysadmin user level can view report schedules.'}
 
 
-def reports_list(context, data_dict):
+def report_jobs(context, data_dict):
     if is_sysadmin():
         return {'success': True}
-    return {'success': False, 'msg': 'Only sysadmin user level can view report.'}
+    return {'success': False, 'msg': 'Only sysadmin user level can view report jobs.'}

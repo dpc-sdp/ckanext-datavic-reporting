@@ -31,7 +31,7 @@ class DataVicReportingPlugin(p.SingletonPlugin):
             'report_schedule_update': authorisation.report_schedule_update,
             'report_schedule_delete': authorisation.report_schedule_delete,
             'report_schedule_list': authorisation.report_schedule_list,
-            'reports_list': authorisation.reports_list,
+            'report_jobs': authorisation.report_jobs,
         }
 
     # IRoutes
@@ -65,6 +65,9 @@ class DataVicReportingPlugin(p.SingletonPlugin):
         map.connect('user_report_schedule_delete', '/dashboard/report-schedule/delete/{id}',
                     controller='ckanext.datavic_reporting.controller:ReportScheduleController',
                     action='delete')
+        map.connect('user_report_schedule_jobs', '/dashboard/report-schedule/jobs/{report_schedule_id}',
+                    controller='ckanext.datavic_reporting.controller:ReportScheduleController',
+                    action='jobs')
 
         return map
 
@@ -90,7 +93,7 @@ class DataVicReportingPlugin(p.SingletonPlugin):
             "report_schedule_update": update.report_schedule_update,
             "report_schedule_delete": delete.report_schedule_delete,
             "report_schedule_list": get.report_schedule_list,
-            "reports_list": get.reports_list,
+            "report_jobs": get.report_jobs,
             "report_job_create": create.report_job_create,
         }
 
