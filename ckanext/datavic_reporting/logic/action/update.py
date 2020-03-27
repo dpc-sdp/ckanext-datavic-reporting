@@ -4,7 +4,7 @@ from ckanext.datavic_reporting.report_models import ReportSchedule
 
 
 def report_schedule_update(context, data_dict):
-    error = 'Invalid or no report schedule ID provided.'
+    errors = {}
 
     id = data_dict.get('id', None)
 
@@ -24,17 +24,17 @@ def report_schedule_update(context, data_dict):
                         setattr(schedule, field, value)
 
                 # Validate data_dict inputs - see validators.py for implementations
-                toolkit.get_validator('report_type_validator')(schedule.report_type)
-                toolkit.get_validator('group_id_or_name_exists')(schedule.org_id, context)
-                toolkit.get_validator('sub_org_ids_validator')(schedule.sub_org_ids, context)
-                toolkit.get_validator('frequency_validator')(schedule.frequency)
-                toolkit.get_validator('user_roles_validator')(schedule.user_roles, context)
-                toolkit.get_validator('emails_validator')(schedule.emails, context)
+                validated_data_dict = toolkit.get_validator('report_schedule_validator')(data_dict, context)
 
-                model.Session.add(schedule)
-                model.Session.commit()
-                return True
+                if validated_data_dict is data_dict:
+                    model.Session.add(schedule)
+                    model.Session.commit()
+                    return True
+                else:
+                    errors = validated_data_dict
         except Exception, e:
-            error = str(e)
+            errors['exception'] = str(e)
+    else:
+        errors = 'Invalid or no report schedule ID provided.'
 
-    return {'error': error}
+    return {'errors': errors}

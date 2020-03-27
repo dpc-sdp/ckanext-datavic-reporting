@@ -18,10 +18,14 @@ def report_schedule_delete(context, data_dict):
             # Load the record
             schedule = ReportSchedule.get(id)
             if schedule:
-                # Mark it as deleted
-                schedule.state = 'deleted'
-                # Save
-                model.Session.add(schedule)
+                # If a schedule has reports - mark it as deleted
+                reports = toolkit.get_action('reports_list')(context, {'id': id})
+                if reports:
+                    schedule.state = 'deleted'
+                    model.Session.add(schedule)
+                # Otherwise delete the report schedule record entirely
+                else:
+                    model.Session.delete(schedule)
                 model.Session.commit()
                 return True
         except Exception, e:

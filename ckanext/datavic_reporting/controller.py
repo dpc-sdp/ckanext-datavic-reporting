@@ -102,20 +102,30 @@ class ReportScheduleController(base.BaseController):
                 h.flash_success('Report schedule created')
                 h.redirect_to('/dashboard/report-schedules')
             # handle errors
-            elif result and result.get('error', None):
+            elif result and result.get('errors', None):
                 vars['data'] = params
-                errors = result.get('error', None)
-                if 'group name' in errors:
-                    vars['errors'] = {
-                        'org_id': "what"
-                    }
+                errors = result.get('errors', None)
+                vars['errors'] = errors
                 h.flash_error(str(errors))
 
         return base.render('user/report_schedules.html',
                            extra_vars=vars)
 
-    def update(self):
+    def update(self, id):
         vars = {}
+        if request.method == 'GET':
+            if id and model.is_id(id):
+                schedule = ReportSchedule.get(id)
+                if schedule:
+                    vars['data'] = schedule.as_dict()
+        elif request.method == 'POST':
+            params = helpers.clean_params(request.POST)
+            params['id'] = id
+            result = toolkit.get_action('report_schedule_update')(self._get_context(), params)
+            if result is True:
+                h.flash_success('Report schedule updated')
+                h.redirect_to('/dashboard/report-schedules')
+
         return base.render('user/report_schedules.html',
                            extra_vars=vars)
 

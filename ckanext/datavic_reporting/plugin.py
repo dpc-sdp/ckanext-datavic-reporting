@@ -59,6 +59,9 @@ class DataVicReportingPlugin(p.SingletonPlugin):
         map.connect('user_report_schedule_create', '/dashboard/report-schedule/create',
                     controller='ckanext.datavic_reporting.controller:ReportScheduleController',
                     action='create')
+        map.connect('user_report_schedule_update', '/dashboard/report-schedule/update/{id}',
+                    controller='ckanext.datavic_reporting.controller:ReportScheduleController',
+                    action='update')
         map.connect('user_report_schedule_delete', '/dashboard/report-schedule/delete/{id}',
                     controller='ckanext.datavic_reporting.controller:ReportScheduleController',
                     action='delete')
@@ -88,6 +91,7 @@ class DataVicReportingPlugin(p.SingletonPlugin):
             "report_schedule_delete": delete.report_schedule_delete,
             "report_schedule_list": get.report_schedule_list,
             "reports_list": get.reports_list,
+            "report_job_create": create.report_job_create,
         }
 
     # IValidators
@@ -99,5 +103,7 @@ class DataVicReportingPlugin(p.SingletonPlugin):
             "frequency_validator": validators.frequency_validator,
             "user_roles_validator": validators.user_roles_validator,
             "emails_validator": validators.emails_validator,
+            "report_schedule_validator": validators.report_schedule_validator,
+            "report_job_validator": validators.report_job_validator,
         }
 

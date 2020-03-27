@@ -58,7 +58,7 @@ report_schedule_table = Table('report_schedule', metadata,
 mapper(ReportSchedule, report_schedule_table)
 
 
-class Report(object):
+class ReportJob(object):
 
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
@@ -75,15 +75,17 @@ class Report(object):
         }
 
 
-report_table = Table('report', metadata,
+report_job_table = Table('report_job', metadata,
                                Column('id', types.UnicodeText, primary_key=True,
                                       default=make_uuid),
                                Column('report_schedule_id', types.UnicodeText),
                                Column('timestamp', types.DateTime, default=datetime.datetime.utcnow()),
                                Column('filename', types.UnicodeText),
+                                # status: scheduled -> processing -> generated -> completed
+                               Column('status', types.UnicodeText),
                                )
 
-mapper(Report, report_table)
+mapper(ReportJob, report_job_table)
 
 
 def init_tables():

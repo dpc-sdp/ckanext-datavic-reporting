@@ -1,6 +1,6 @@
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
-from ckanext.datavic_reporting.report_models import ReportSchedule, Report
+from ckanext.datavic_reporting.report_models import ReportSchedule, ReportJob
 from ckan.logic import side_effect_free
 
 
@@ -30,7 +30,7 @@ def reports_list(context, data_dict):
         try:
             # Check access - see authorisaton.py for implementation
             toolkit.check_access('reports_list', context, {})
-            reports = model.Session.query(Report).filter_by(report_schedule_id=id).all()
+            reports = model.Session.query(ReportJob).filter_by(report_schedule_id=id).all()
             return [r.as_dict() for r in reports]
         except Exception, e:
             error = str(e)

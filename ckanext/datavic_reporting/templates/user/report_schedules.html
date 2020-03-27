@@ -9,11 +9,16 @@
 {% resource 'datavic_reporting/datavic_reporting.js' %}
 
 <div id="datavic_reporting">
-  <form action="/dashboard/report-schedule/create" method="post" class="form-horizontal">
+  <form action="/dashboard/report-schedule/{% if c.action == 'update' and data and data['id'] %}update/{{ data['id'] }}{% else %}create{% endif %}" method="post" class="form-horizontal">
     <h3>Create report schedule</h3>
 
+    {% if data %}
+    data: {{ data }}
+    {% endif %}
+    <br />
     {{ errors }}
 
+    {% if c.action != 'update' %}
     {{ form.select(
       name='report_type',
       id='report_schedule_report_type',
@@ -24,11 +29,13 @@
       selected=data.report_type if data else 'general',
       error=errors.report_type if errors else None
     ) }}
+    {% endif %}
 
     {{ form.select(
       'org_id',
       id='general_date_range_organisations',
       label=_('Organisations'), options=organisations,
+      selected=data.org_id if data and data.org_id else '',
       error=errors.org_id if errors and errors.org_id else None
     ) }}
 
@@ -60,7 +67,7 @@
 
     {{ form.textarea('emails', label=_('Emails'), value=data.emails if data else None, error=errors.emails if errors else None) }}
 
-    <button class="btn btn-primary">Create</button>
+    <button class="btn btn-primary">{% if c.action == 'update'%}Update{% else %}Create{% endif %}</button>
 
   </form>
 </div>
@@ -121,7 +128,10 @@
           <td>
             {{ schedule.state[0]|upper }}{{ schedule.state[1:] }}
           </td>
-          <td><a href="" class="btn btn-small btn-warning">Edit</a> <a href="/dashboard/report-schedule/delete/{{ schedule.id }}" class="btn btn-small btn-danger">Delete</a></td>
+          <td>
+            <a href="/dashboard/report-schedule/update/{{ schedule.id }}" class="btn btn-small btn-warning">Edit</a>
+            <a href="/dashboard/report-schedule/delete/{{ schedule.id }}" class="btn btn-small btn-danger">Delete</a>
+          </td>
         </tr>
       {% endfor %}
       </tbody>
