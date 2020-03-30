@@ -12,10 +12,6 @@
   <form action="/dashboard/report-schedule/{% if c.action == 'update' and data and data['id'] %}update/{{ data['id'] }}{% else %}create{% endif %}" method="post" class="form-horizontal">
     <h3>Create report schedule</h3>
 
-    {% if data %}
-    data: {{ data }}
-    {% endif %}
-    <br />
     {{ errors }}
 
     {% if c.action != 'update' %}

@@ -24,13 +24,23 @@
             <tr>
                 <td><span title="{{ job['id'] }}">{{ job['id'][:3] }}...{{ job['id'][-3:] }}</span></td>
               <td>{{ schedule.report_type[0]|upper }}{{ schedule.report_type[1:] }}</td>
-              <td>{{ schedule.frequency[0]|upper }}{{ schedule.frequency[1:] }}</td>
               <td>
-                {{ schedule.user_roles[0]|upper }}{{ schedule.user_roles[1:] }}
+                {% if job.emails %}
+                  {{ job.frequency[0]|upper }}{{ job.frequency[1:] }}
+                {% else %}
+                  -
+                {% endif %}
               </td>
               <td>
-                {% if schedule.emails %}
-                  {{ schedule.emails }}
+                {% if job.user_roles %}
+                  {{ job.user_roles[0]|upper }}{{ job.user_roles[1:] }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td>
+                {% if job.emails %}
+                  {{ job.emails }}
                 {% else %}
                   -
                 {% endif %}

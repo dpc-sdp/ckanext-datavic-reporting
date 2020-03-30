@@ -72,19 +72,25 @@ class ReportJob(object):
             'report_schedule_id': self.report_schedule_id,
             'timestamp': self.timestamp.isoformat(),
             'filename': self.filename,
+            'frequency': self.frequency,
+            'user_roles': self.user_roles,
+            'emails': self.emails,
             'status': self.status,
         }
 
 
 report_job_table = Table('report_job', metadata,
-                               Column('id', types.UnicodeText, primary_key=True,
-                                      default=make_uuid),
-                               Column('report_schedule_id', types.UnicodeText),
-                               Column('timestamp', types.DateTime, default=datetime.datetime.utcnow()),
-                               Column('filename', types.UnicodeText),
-                                # status: scheduled -> processing -> generated -> completed
-                               Column('status', types.UnicodeText),
-                               )
+                         Column('id', types.UnicodeText, primary_key=True,
+                                default=make_uuid),
+                         Column('report_schedule_id', types.UnicodeText),
+                         Column('timestamp', types.DateTime, default=datetime.datetime.utcnow()),
+                         Column('filename', types.UnicodeText),
+                         Column('frequency', types.UnicodeText),
+                         Column('user_roles', types.UnicodeText),
+                         Column('emails', types.UnicodeText),
+                         # status: scheduled -> processing -> generated -> completed
+                         Column('status', types.UnicodeText),
+                         )
 
 mapper(ReportJob, report_job_table)
 
