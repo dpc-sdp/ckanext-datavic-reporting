@@ -25,7 +25,6 @@
       selected=data.report_type if data else 'general',
       error=errors.report_type if errors else None
     ) }}
-    {% endif %}
 
     {{ form.select(
       'org_id',
@@ -36,7 +35,8 @@
     ) }}
 
     {{ form.select('sub_org_ids', id='general_date_range_sub_organisations', label=_('Sub Organisations')) }}
-    
+    {% endif %}
+
     {% if request.environ['LAGOON_GIT_SAFE_BRANCH'] == 'master' %}
       {% set frequency_options =  [{'text': 'Monthly', 'value': 'monthly'}, {'text': 'Financial year', 'value': 'yearly'}] %}
       {% set default_option = 'monthly' %}
