@@ -66,6 +66,10 @@ class ReportJob(object):
         self.id = make_uuid()
         self.timestamp = datetime.datetime.utcnow()
 
+    @classmethod
+    def get(self, id):
+        return model.Session.query(self).filter_by(id=id).first()
+        
     def as_dict(self):
         return {
             'id': self.id,

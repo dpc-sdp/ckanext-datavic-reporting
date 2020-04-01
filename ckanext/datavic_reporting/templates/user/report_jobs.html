@@ -25,7 +25,7 @@
                 <td><span title="{{ job['id'] }}">{{ job['id'][:3] }}...{{ job['id'][-3:] }}</span></td>
               <td>{{ schedule.report_type[0]|upper }}{{ schedule.report_type[1:] }}</td>
               <td>
-                {% if job.emails %}
+                {% if job.frequency %}
                   {{ job.frequency[0]|upper }}{{ job.frequency[1:] }}
                 {% else %}
                   -
@@ -47,7 +47,7 @@
               </td>
               <td>{{ job['status'] }}</td>
               <td>
-                <a href="" class="btn btn-small">Download</a>
+                <a href="/dashboard/report-schedule/jobs/{{ job['id'] }}/download" class="btn btn-small">Download</a>
               </td>
             </tr>
           {% endfor %}

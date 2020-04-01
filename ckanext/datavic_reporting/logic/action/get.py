@@ -7,10 +7,16 @@ from ckan.logic import side_effect_free
 @side_effect_free
 def report_schedule_list(context, data_dict):
     state = data_dict.get('state', None)
+    frequency = data_dict.get('frequency', None)
     try:
         # Check access - see authorisaton.py for implementation
         toolkit.check_access('report_schedule_list', context, {})
-        if state:
+        if state and frequency:
+            scheduled_reports = model.Session.query(ReportSchedule)\
+                                                .filter_by(state=state)\
+                                                .filter_by(frequency=frequency)\
+                                                .all()
+        elif state:
             scheduled_reports = model.Session.query(ReportSchedule).filter_by(state=state).all()
         else:
             scheduled_reports = model.Session.query(ReportSchedule).all()

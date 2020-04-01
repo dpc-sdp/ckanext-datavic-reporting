@@ -68,6 +68,9 @@ class DataVicReportingPlugin(p.SingletonPlugin):
         map.connect('user_report_schedule_jobs', '/dashboard/report-schedule/jobs/{report_schedule_id}',
                     controller='ckanext.datavic_reporting.controller:ReportScheduleController',
                     action='jobs')
+        map.connect('user_report_schedule_job_download', '/dashboard/report-schedule/jobs/{report_job_id}/download',
+                    controller='ckanext.datavic_reporting.controller:ReportScheduleController',
+                    action='job_download')
 
         return map
 

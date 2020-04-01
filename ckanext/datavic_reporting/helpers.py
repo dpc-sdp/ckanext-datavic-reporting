@@ -9,6 +9,9 @@ import calendar
 from dateutil import parser
 import math
 import authorisation
+import os
+from pylons import response
+import mimetypes
 import logging
 
 log = logging.getLogger(__name__)
@@ -18,7 +21,8 @@ def get_context():
     return {
         'model': model,
         'session': model.Session,
-        'user': toolkit.c.user
+        'user': toolkit.c.user,
+        'auth_user_obj': get_user()
     }
 
 
@@ -279,8 +283,16 @@ def write_csv_row(csv_writer, dataset_list):
                 csv_writer.writerow(row + res_list)
 
 
-def generate_general_report(filename, start_date, end_date, organisation):
-    csv_writer = csv.writer(open('/tmp/' + filename, 'wb'))
+def generate_general_report(path, filename, start_date, end_date, organisation):
+    # Create directory structure if it does not exist
+    try:
+        log.info('Create dir: {0}'.format(path))
+        os.makedirs(path)
+    except OSError as e:
+        log.error(e)
+        if not os.path.isdir(path):
+            raise
+    csv_writer = csv.writer(open(path + filename, 'wb'))
 
     header = [
         'Title',
@@ -333,3 +345,39 @@ def get_report_schedule_organisation_list():
 
     organisations.insert(0, {'value': '', 'text': 'Please select'})
     return organisations
+
+
+def get_organisation_roles(context, id, role):
+    user_emails = []
+    data_dict = {
+        "id": id,
+        "include_dataset_count": False,
+        "include_extras": False,
+        "include_users": True,
+        "include_groups": False,
+        "include_tags": False,
+        "include_followers": False
+    }   
+    organisation = toolkit.get_action('organization_show')(context, data_dict=data_dict)   
+    for org_user in organisation.get('users'):
+        if(org_user.get('capacity') == role):           
+            user = toolkit.get_action('user_show')(context, data_dict={"id":org_user.get('id')})
+            user_emails.append(user.get('email'))
+    return user_emails
+
+
+def download_file(filepath):
+    fh = open(filepath)
+    filename = os.path.basename(filepath)
+    ctype = get_file_type(filename)
+    response.headers[b'Content-Type'] = b'{0}; charset=utf-8'.format(ctype)
+    response.headers[b'Content-Disposition'] = b"attachment;filename={0}".format(filename)
+    return fh.read()
+
+
+def get_file_type(filename):
+    ctype, encoding = mimetypes.guess_type(filename)
+    if ctype is None or encoding is not None:
+        ctype = "application/octet-stream"
+    
+    return ctype  
