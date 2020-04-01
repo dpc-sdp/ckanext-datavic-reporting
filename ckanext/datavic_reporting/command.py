@@ -65,4 +65,4 @@ class CreateScheduledReportJob(CkanCommand):
                 if not result:
                     log.error("Error creating report job: {0}".format(result))
         else:
-            log.error("Unknown scheduled report state {0}".format(frequency))
+            log.error("Unknown scheduled report frequency {0}".format(frequency))

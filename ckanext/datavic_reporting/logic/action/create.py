@@ -76,7 +76,9 @@ def report_job_create(context, data_dict):
             user_emails = [] 
             if data_dict.get('user_roles'):               
                 for user_role in data_dict.get('user_roles').split(','):
-                    user_emails.append(helpers.get_organisation_roles(context, org_id, user_role))
+                    role_emails = helpers.get_organisation_role_emails(context, org_id, user_role)
+                    if role_emails:
+                        user_emails.append(role_emails)
 
             if data_dict.get('emails'):
                 user_emails.extend(data_dict.get('emails').split(','))          
@@ -91,14 +93,17 @@ def report_job_create(context, data_dict):
                     'file_path': file_path
                 }
                 mailer.send_scheduled_report_email(user_emails, 'scheduled_report', extra_vars)
-
-            report_job.status = constants.Statuses.Completed
+                report_job.status = constants.Statuses.EmailsSent
+            else:
+                report_job.status = constants.Statuses.NoEmails
+                
             model.Session.commit()
-
             return True
         else:
             errors = validated_data_dict
     except Exception, e:
+        report_job.status = constants.Statuses.Failed
+        model.Session.commit()
         log.error(e)
         errors['exception'] = str(e)
 

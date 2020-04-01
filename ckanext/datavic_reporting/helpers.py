@@ -347,7 +347,7 @@ def get_report_schedule_organisation_list():
     return organisations
 
 
-def get_organisation_roles(context, id, role):
+def get_organisation_role_emails(context, id, role):
     user_emails = []
     data_dict = {
         "id": id,
@@ -362,8 +362,10 @@ def get_organisation_roles(context, id, role):
     for org_user in organisation.get('users'):
         if(org_user.get('capacity') == role):           
             user = toolkit.get_action('user_show')(context, data_dict={"id":org_user.get('id')})
-            user_emails.append(user.get('email'))
-    return user_emails
+            user_email = user.get('email')
+            if user_email:
+                user_emails.append(user_email)
+    return user_emails if user_emails else None
 
 
 def download_file(filepath):

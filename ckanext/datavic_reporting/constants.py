@@ -14,6 +14,8 @@ class Frequencies:
         List = [Hourly, Daily]  
 
 class Statuses:
-    Processing = "processing"
-    Generated = "generated"
-    Completed = "completed"
+    Processing = "Processing"
+    Generated = "Generated"
+    EmailsSent = "Emails sent"
+    NoEmails = "No emails sent"
+    Failed = "Failed"

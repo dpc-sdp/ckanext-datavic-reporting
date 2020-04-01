@@ -84,10 +84,20 @@ def report_schedule_validator(data_dict, context, action='create'):
 def report_job_validator(data_dict, context):
     errors = {}
 
-    # id = data_dict.get('id', None)
-    #
-    # # Check to make sure `id` looks like a UUID
-    # if id and model.is_id(id):
+    try:
+        toolkit.get_validator('frequency_validator')(data_dict['frequency'])
+    except Exception:
+        errors['frequency'] = [u'Invalid frequency selection']
+
+    try:
+        toolkit.get_validator('user_roles_validator')(data_dict['user_roles'], context)
+    except Exception:
+        errors['user_roles'] = [u'Invalid user role selection']
+
+    try:
+        toolkit.get_validator('emails_validator')(data_dict['emails'], context)
+    except Exception:
+        errors['emails'] = [u'Invalid email entry']
 
     return errors if errors else data_dict
 
