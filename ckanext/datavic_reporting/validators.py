@@ -41,40 +41,41 @@ def emails_validator(emails, context):
     return emails
 
 
-def report_schedule_validator(data_dict, context):
+def report_schedule_validator(data_dict, context, action='create'):
     errors = {}
-    try:
-        toolkit.get_validator('report_type_validator')(data_dict['report_type'])
-    except Exception:
-        errors['report_type'] = 'Invalid or no report type selected'
-
-    try:
-        toolkit.get_validator('org_id_validator')(data_dict['org_id'], context)
-    except Exception:
-        errors['org_id'] = 'Invalid or no organisation selected'
-
-    sub_org_ids = data_dict.get('sub_org_ids', '')
-
-    if sub_org_ids:
+    if action == 'create':
         try:
-            toolkit.get_validator('sub_org_ids_validator')(data_dict['sub_org_ids'], context)
+            toolkit.get_validator('report_type_validator')(data_dict['report_type'])
         except Exception:
-            errors['sub_org_ids'] = 'Invalid sub-organisation selection'
+            errors['report_type'] = [u'Invalid or no report type selected']
+
+        try:
+            toolkit.get_validator('org_id_validator')(data_dict['org_id'], context)
+        except Exception:
+            errors['org_id'] = [u'Invalid or no organisation selected']
+
+        sub_org_ids = data_dict.get('sub_org_ids', '')
+
+        if sub_org_ids:
+            try:
+                toolkit.get_validator('sub_org_ids_validator')(data_dict['sub_org_ids'], context)
+            except Exception:
+                errors['sub_org_ids'] = 'Invalid sub-organisation selection'
 
     try:
         toolkit.get_validator('frequency_validator')(data_dict['frequency'])
     except Exception:
-        errors['frequency'] = 'Invalid frequency selection'
+        errors['frequency'] = [u'Invalid frequency selection']
 
     try:
         toolkit.get_validator('user_roles_validator')(data_dict['user_roles'], context)
     except Exception:
-        errors['user_roles'] = 'Invalid user role selection'
+        errors['user_roles'] = [u'Invalid user role selection']
 
     try:
         toolkit.get_validator('emails_validator')(data_dict['emails'], context)
     except Exception:
-        errors['emails'] = 'Invalid email entry'
+        errors['emails'] = [u'Invalid email entry']
 
     return errors if errors else data_dict
 

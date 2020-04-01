@@ -95,8 +95,6 @@ class ReportScheduleController(base.BaseController):
         if request.method == 'POST':
             params = helpers.clean_params(request.POST)
             result = toolkit.get_action('report_schedule_create')(self._get_context(), params)
-            from pprint import pprint
-            pprint(result)
             # handle success
             if result is True:
                 h.flash_success('Report schedule created')
@@ -104,9 +102,8 @@ class ReportScheduleController(base.BaseController):
             # handle errors
             elif result and result.get('errors', None):
                 vars['data'] = params
-                errors = result.get('errors', None)
-                vars['errors'] = errors
-                h.flash_error(str(errors))
+                vars['errors'] = result.get('errors', None)
+                h.flash_error('Please correct the errors below')
 
         return base.render('user/report_schedules.html',
                            extra_vars=vars)
@@ -125,20 +122,21 @@ class ReportScheduleController(base.BaseController):
             if result is True:
                 h.flash_success('Report schedule updated')
                 h.redirect_to('/dashboard/report-schedules')
+            elif result and result.get('errors', None):
+                vars['data'] = params
+                vars['errors'] = result.get('errors', None)
+                h.flash_error('Please correct the errors below')
 
         return base.render('user/report_schedules.html',
                            extra_vars=vars)
 
     def delete(self, id=None):
         result = toolkit.get_action('report_schedule_delete')(self._get_context(), {'id': id})
-        if result:
+        if result is True:
             h.flash_success('Report schedule deleted')
         else:
-            h.flash_error('Error')
+            h.flash_error('Error deleting report schedule')
         h.redirect_to('/dashboard/report-schedules')
-        # vars = {}
-        # return base.render('user/report_schedules.html',
-        #                    extra_vars=vars)
 
     def jobs(self, report_schedule_id=None):
         vars = {}

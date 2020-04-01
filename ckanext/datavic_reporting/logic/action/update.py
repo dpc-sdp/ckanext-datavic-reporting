@@ -18,13 +18,13 @@ def report_schedule_update(context, data_dict):
             schedule = ReportSchedule.get(id)
             if schedule:
                 # The list of fields that can be updated is controlled here
-                for field in ['report_type', 'org_id', 'sub_org_ids', 'frequency', 'user_roles', 'emails']:
+                for field in ['frequency', 'user_roles', 'emails']:
                     value = data_dict.get(field, None)
                     if value:
                         setattr(schedule, field, value)
 
                 # Validate data_dict inputs - see validators.py for implementations
-                validated_data_dict = toolkit.get_validator('report_schedule_validator')(data_dict, context)
+                validated_data_dict = toolkit.get_validator('report_schedule_validator')(data_dict, context, 'update')
 
                 if validated_data_dict is data_dict:
                     model.Session.add(schedule)

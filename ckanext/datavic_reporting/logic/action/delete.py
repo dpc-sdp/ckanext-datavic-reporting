@@ -19,7 +19,7 @@ def report_schedule_delete(context, data_dict):
             schedule = ReportSchedule.get(id)
             if schedule:
                 # If a schedule has reports - mark it as deleted
-                reports = toolkit.get_action('reports_list')(context, {'id': id})
+                reports = toolkit.get_action('report_jobs')(context, {'report_schedule_id': id})
                 if reports:
                     schedule.state = 'deleted'
                     model.Session.add(schedule)
@@ -31,4 +31,4 @@ def report_schedule_delete(context, data_dict):
         except Exception, e:
             error = str(e)
 
-    return {'error': error}
+    return {'errors': error}

@@ -10,7 +10,7 @@
 
 <div id="datavic_reporting">
   <form action="/dashboard/report-schedule/{% if c.action == 'update' and data and data['id'] %}update/{{ data['id'] }}{% else %}create{% endif %}" method="post" class="form-horizontal">
-    <h3>Create report schedule</h3>
+    <h3>{% if c.action == 'update'%}Update{% else %}Create{% endif %} report schedule</h3>
 
     {{ errors }}
 
@@ -25,7 +25,6 @@
       selected=data.report_type if data else 'general',
       error=errors.report_type if errors else None
     ) }}
-    {% endif %}
 
     {{ form.select(
       'org_id',
@@ -36,6 +35,7 @@
     ) }}
 
     {{ form.select('sub_org_ids', id='general_date_range_sub_organisations', label=_('Sub Organisations')) }}
+    {% endif %}
 
     {{ form.select(
       name='frequency',
@@ -79,14 +79,14 @@
     <table class="table table-bordered table-striped table-condensed">
       <thead>
         <tr>
-          <th>Report type</th>
+          <th width="9%">Report type</th>
           <th>Organisation</th>
           <th>Sub-organisations</th>
-          <th>Frequency</th>
-          <th>User role</th>
-          <th>Emails</th>
-          <th>State</th>
-          <th>Actions</th>
+          <th width="8%">Frequency</th>
+          <th width="7%">User role</th>
+          <th width="10%">Emails</th>
+          <th width="6%">State</th>
+          <th width="18%">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -125,9 +125,11 @@
             {{ schedule.state[0]|upper }}{{ schedule.state[1:] }}
           </td>
           <td>
-            <a href="/dashboard/report-schedule/update/{{ schedule.id }}" class="btn btn-small btn-warning">Edit</a>
-            <a href="/dashboard/report-schedule/delete/{{ schedule.id }}" class="btn btn-small btn-danger">Delete</a>
-            <a href="/dashboard/report-schedule/jobs/{{ schedule.id }}" class="btn btn-small">Jobs</a>
+            <a href="{{ h.url_for('user_report_schedule_update', id=schedule.id ) }}" class="btn btn-small btn-warning">Edit</a>
+            {% if schedule.state != 'deleted' %}
+              <a href="{{ h.url_for('user_report_schedule_delete', id=schedule.id ) }}" class="btn btn-small btn-danger">Delete</a>
+            {% endif %}
+            <a href="{{ h.url_for('user_report_schedule_jobs', report_schedule_id=schedule.id ) }}" class="btn btn-small">Jobs</a>
           </td>
         </tr>
       {% endfor %}
