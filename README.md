@@ -19,6 +19,24 @@ Use the following paster command to initialise the tables:
 
 * Replacing `production.ini` with the respective CKAN .ini file to be used.
 
+## Creating Scheduled Report Job
+
+To create the scheduled report job a paster command is used.
+The paster command accepts a frequency parameter which used to filter scheduled reports b frequency.
+Reports are created for the scheduled report to the file system using the following path and naming conventions
+{ckan.datavic_reporting.scheduled_reports_path}/org_id/{yyyy}/{mm}/general_report_{timestamp}.csv
+
+Before running the paster command configure the CKAN .ini file:
+ckan.datavic_reporting.scheduled_reports_path = /app/filestore/reports
+
+To run the paster command (Replace {frequency} with 'monthly' or 'yearly'):
+
+    . /app/ckan/default/bin/activate
+
+    cd /app/src/ckanext-datavic-reporting
+
+    paster createjob {frequency} --config=/app/ckan/default/production.ini
+
 ## API Endpoints
 
 This extension adds the following endpoints to the standard CKAN API (e.g. http://datavic-ckan.docker.amazee.io/api/action/ACTION_NAME):
