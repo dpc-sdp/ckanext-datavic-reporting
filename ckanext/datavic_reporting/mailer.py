@@ -110,7 +110,6 @@ def _mail_recipient(recipient_name, recipient_email,
                                    "smtp.password must be configured as well.")
             smtp_connection.login(smtp_user, smtp_password)
 
-        log.debug("Attempting to send email to {0}".format(recipient_email))
         smtp_connection.sendmail(mail_from, [recipient_email], msg.as_string())
         log.info("Sent email to {0}".format(recipient_email))
 
@@ -177,7 +176,7 @@ def send_scheduled_report_email(user_emails, email_type, extra_vars):
     subject = render_jinja2('emails/subjects/{0}.txt'.format(email_type), extra_vars)
     body = render_jinja2('emails/bodies/{0}.txt'.format(email_type), extra_vars)
     attachments =  [extra_vars.get('file_path')]
-    
+    log.debug('Attempting to send {0} to: {1}'.format(email_type, user_emails))
     for user_email in user_emails:
         try:
             # Attempt to send mail.
