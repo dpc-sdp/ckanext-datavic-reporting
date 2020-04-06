@@ -50,6 +50,7 @@ def report_job_create(context, data_dict):
         if validated_data_dict is data_dict:
             report_job_path = toolkit.config.get('ckan.datavic_reporting.scheduled_reports_path')
             org_id = data_dict.get('org_id')
+            sub_org_ids = data_dict.get('sub_org_ids')
             now = datetime.datetime.now()
             path_date = now.strftime('%Y') + '/' + now.strftime('%m')
             path = "{0}/{1}/{2}/".format(report_job_path, org_id, path_date)
@@ -68,7 +69,7 @@ def report_job_create(context, data_dict):
             model.Session.add(report_job)
             model.Session.commit()
 
-            helpers.generate_general_report(path, filename, None, None, data_dict.get('org_id'))
+            helpers.generate_general_report(path, filename, None, None, org_id if sub_org_ids == 'all-sub-organisations' else sub_org_ids)
            
             report_job.status = constants.Statuses.Generated
             model.Session.commit()
