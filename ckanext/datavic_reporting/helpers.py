@@ -286,11 +286,10 @@ def write_csv_row(csv_writer, dataset_list):
 def generate_general_report(path, filename, start_date, end_date, organisation):
     # Create directory structure if it does not exist
     try:
-        log.info('Create dir: {0}'.format(path))
         os.makedirs(path)
     except OSError as e:
-        log.error(e)
         if not os.path.isdir(path):
+            log.error(e)
             raise
     csv_writer = csv.writer(open(path + filename, 'wb'))
 
