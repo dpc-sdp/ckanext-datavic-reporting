@@ -14,6 +14,7 @@ import constants
 c = toolkit.c
 h = base.h
 request = base.request
+abort = base.abort
 
 
 class ReportingController(base.BaseController):
@@ -21,7 +22,7 @@ class ReportingController(base.BaseController):
     def check_user_access(cls):
         user_dashboard_reports = authorisation.user_dashboard_reports(helpers.get_context())
         if not user_dashboard_reports or not user_dashboard_reports.get('success'):
-            toolkit.NotAuthorized(403, toolkit._('You are not Authorized'))
+            abort(403, toolkit._('You are not Authorized'))
 
     @classmethod
     def general_report(cls, start_date, end_date, organisation):
@@ -73,15 +74,23 @@ class ReportingController(base.BaseController):
 
 
 class ReportScheduleController(base.BaseController):
+    @classmethod
+    def check_user_access(cls):
+        user_report_schedules = authorisation.user_report_schedules(helpers.get_context())
+        if not user_report_schedules or not user_report_schedules.get('success'):
+            abort(403, toolkit._('You are not Authorized'))
+
     def schedules(self):
-        # TODO: Check user access
-        #self.check_user_access()
+        self.check_user_access()
+
         vars = {}
 
         return base.render('user/report_schedules.html',
                            extra_vars=vars)
 
     def create(self):
+        self.check_user_access()
+
         vars = {}
         if request.method == 'POST':
             params = helpers.clean_params(request.POST)
@@ -100,6 +109,8 @@ class ReportScheduleController(base.BaseController):
                            extra_vars=vars)
 
     def update(self, id):
+        self.check_user_access()
+
         vars = {}
         if request.method == 'GET':
             if id and model.is_id(id):
@@ -122,6 +133,8 @@ class ReportScheduleController(base.BaseController):
                            extra_vars=vars)
 
     def delete(self, id=None):
+        self.check_user_access()
+
         result = toolkit.get_action('report_schedule_delete')(helpers.get_context(), {'id': id})
         if result is True:
             h.flash_success('Report schedule deleted')
@@ -130,6 +143,8 @@ class ReportScheduleController(base.BaseController):
         h.redirect_to('/dashboard/report-schedules')
 
     def jobs(self, report_schedule_id=None):
+        self.check_user_access()
+
         vars = {}
 
         schedule = ReportSchedule.get(report_schedule_id)
@@ -140,6 +155,8 @@ class ReportScheduleController(base.BaseController):
         return base.render('user/report_jobs.html', extra_vars=vars)
 
     def job_download(self, report_job_id=None):
+        self.check_user_access()
+        
         job = ReportJob.get(report_job_id)
         if job:
            return helpers.download_file(job.filename)

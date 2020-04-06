@@ -27,6 +27,7 @@ class DataVicReportingPlugin(p.SingletonPlugin):
     def get_auth_functions(self):
         return {
             'user_dashboard_reports': authorisation.user_dashboard_reports,
+            'user_report_schedules': authorisation.user_report_schedules,
             'report_schedule_create': authorisation.report_schedule_create,
             'report_schedule_update': authorisation.report_schedule_update,
             'report_schedule_delete': authorisation.report_schedule_delete,

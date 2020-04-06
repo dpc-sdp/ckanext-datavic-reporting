@@ -31,6 +31,17 @@ def user_dashboard_reports(context, data_dict=None):
     return {'success': False, 'msg': 'Only user level admin or above can view reports.'}
 
 
+def user_report_schedules(context, data_dict=None):
+    user = helpers.get_user()
+    if not user:
+        {'success': False, 'msg': 'Only logged in users can view reports.'}
+
+    # Sysadmin can do anything
+    if is_sysadmin():
+        return {'success': True}
+
+    return {'success': False, 'msg': 'Only user level sysadmin or above can view reports.'}
+
 def report_schedule_create(context, data_dict):
     if is_sysadmin():
         return {'success': True}
