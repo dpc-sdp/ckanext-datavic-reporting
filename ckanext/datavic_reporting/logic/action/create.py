@@ -89,7 +89,7 @@ def report_job_create(context, data_dict):
                 extra_vars = {
                     'site_title': toolkit.config.get('ckan.site_title'),
                     'site_url': toolkit.config.get('ckan.site_url'),
-                    'org_id': data_dict.get('org_id'),
+                    'org_id': organisation,
                     'frequency': data_dict.get('frequency'),
                     'date': now.strftime('%Y') + ' ' + now.strftime('%B'),
                     'file_path': file_path
