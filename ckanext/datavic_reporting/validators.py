@@ -20,6 +20,9 @@ def org_id_validator(org_id, context):
 def sub_org_ids_validator(sub_org_ids, context):
     sub_org_ids = sub_org_ids.split(',')
     for sub_org in sub_org_ids:
+        # Ignore checking if 'all-sub-organisations' group exists as we know it does not
+        if sub_org.lower() == 'all-sub-organisations': 
+            continue
         toolkit.get_validator('group_id_or_name_exists')(sub_org.strip(), context)
     return sub_org_ids
 
