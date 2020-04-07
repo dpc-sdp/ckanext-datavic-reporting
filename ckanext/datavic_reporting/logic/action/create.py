@@ -108,9 +108,9 @@ def report_job_create(context, data_dict):
             errors = validated_data_dict
     except Exception, e:
         log.debug('report_job_create: Failed')
-        log.debug('File Path: {0}'.format(file_path))
-        log.debug('user_emails: {0}'.format(user_emails))
-        log.debug('extra_vars: {0}'.format(extra_vars))
+        log.debug('File Path: {0}'.format(file_path if file_path else None))
+        log.debug('user_emails: {0}'.format(user_emails if user_emails else None))
+        log.debug('extra_vars: {0}'.format(extra_vars if extra_vars else None))
         report_job.status = constants.Statuses.Failed
         model.Session.commit()
         log.error(e)
