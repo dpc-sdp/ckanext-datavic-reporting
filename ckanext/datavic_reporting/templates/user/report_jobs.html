@@ -11,6 +11,7 @@
           <thead>
             <tr>
               <th width="8%">ID</th>
+              <th width="10%">Timestamp</th>
               <th width="10%">Report type</th>
               <th width="10%">Frequency</th>
               <th width="10%">User role</th>
@@ -22,7 +23,8 @@
           <tbody>
           {% for job in jobs %}
             <tr>
-                <td><span title="{{ job['id'] }}">{{ job['id'][:3] }}...{{ job['id'][-3:] }}</span></td>
+              <td><span title="{{ job['id'] }}">{{ job['id'][:3] }}...{{ job['id'][-3:] }}</span></td>
+              <td>{{ h.render_datetime(job.timestamp, date_format='%Y-%m-%d %H:%M') }}</td>
               <td>{{ schedule.report_type[0]|upper }}{{ schedule.report_type[1:] }}</td>
               <td>
                 {% if job.frequency %}
