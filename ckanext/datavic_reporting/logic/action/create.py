@@ -9,6 +9,7 @@ import logging
 
 log = logging.getLogger(__name__)
 
+
 def report_schedule_create(context, data_dict):
     errors = {}
     try:
@@ -51,43 +52,37 @@ def report_job_create(context, data_dict):
             report_job_path = toolkit.config.get('ckan.datavic_reporting.scheduled_reports_path')
             org_id = data_dict.get('org_id')
             sub_org_ids = data_dict.get('sub_org_ids')
-            organisation = org_id if sub_org_ids == 'all-sub-organisations' else sub_org_ids
+            organisation = org_id if not sub_org_ids or sub_org_ids == 'all-sub-organisations' else sub_org_ids
             now = datetime.datetime.now()
             path_date = now.strftime('%Y') + '/' + now.strftime('%m')
             path = "{0}/{1}/{2}/".format(report_job_path, organisation, path_date)
-            filename = 'general_report_{0}.csv'.format(now.isoformat())  
-            file_path = path + filename   
+            filename = 'general_report_{0}.csv'.format(now.isoformat())
+            file_path = path + filename
 
             report_job_dict = {
                 'report_schedule_id': data_dict['id'],
                 'filename': file_path,
                 'frequency': data_dict['frequency'],
                 'user_roles': data_dict['user_roles'],
-                'emails': data_dict['emails'],            
+                'emails': data_dict['emails'],
                 'status': constants.Statuses.Processing
             }
             report_job = ReportJob(**report_job_dict)
             model.Session.add(report_job)
             model.Session.commit()
-            log.debug('report_job_create: Processing')
-
             helpers.generate_general_report(path, filename, None, None, organisation)
-           
             report_job.status = constants.Statuses.Generated
             model.Session.commit()
-            log.debug('report_job_create: Generated')
 
-            user_emails = [] 
-            if data_dict.get('user_roles'): 
-                log.debug('user_roles: {0}'.format(data_dict.get('user_roles')))       
+            user_emails = []
+            if data_dict.get('user_roles'):
                 for user_role in data_dict.get('user_roles').split(','):
-                    log.debug('get_organisation_role_emails: {0} - {1}'.format(organisation, user_role))      
                     role_emails = helpers.get_organisation_role_emails(context, organisation, user_role)
                     if role_emails:
                         user_emails.extend(role_emails)
 
             if data_dict.get('emails'):
-                user_emails.extend(data_dict.get('emails').split(','))          
+                user_emails.extend(data_dict.get('emails').split(','))
 
             if user_emails and len(user_emails) > 0:
                 extra_vars = {
@@ -100,19 +95,14 @@ def report_job_create(context, data_dict):
                 }
                 mailer.send_scheduled_report_email(user_emails, 'scheduled_report', extra_vars)
                 report_job.status = constants.Statuses.EmailsSent
-                log.debug('report_job_create: EmailsSent')
             else:
                 report_job.status = constants.Statuses.NoEmails
-                
+
             model.Session.commit()
             return True
         else:
             errors = validated_data_dict
     except Exception, e:
-        log.debug('report_job_create: Failed')
-        log.debug('File Path: {0}'.format(file_path if file_path else None))
-        log.debug('user_emails: {0}'.format(user_emails if user_emails else None))
-        log.debug('extra_vars: {0}'.format(extra_vars if extra_vars else None))
         report_job.status = constants.Statuses.Failed
         model.Session.commit()
         log.error(e)
