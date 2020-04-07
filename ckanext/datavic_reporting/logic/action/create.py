@@ -78,8 +78,10 @@ def report_job_create(context, data_dict):
             log.debug('report_job_create: Generated')
 
             user_emails = [] 
-            if data_dict.get('user_roles'):               
+            if data_dict.get('user_roles'): 
+                log.debug('user_roles: {0}'.format(data_dict.get('user_roles')))       
                 for user_role in data_dict.get('user_roles').split(','):
+                    log.debug('get_organisation_role_emails: {0} - {1}'.format(organisation, user_role))      
                     role_emails = helpers.get_organisation_role_emails(context, organisation, user_role)
                     if role_emails:
                         user_emails.extend(role_emails)
