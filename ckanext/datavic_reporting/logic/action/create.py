@@ -69,11 +69,13 @@ def report_job_create(context, data_dict):
             report_job = ReportJob(**report_job_dict)
             model.Session.add(report_job)
             model.Session.commit()
+            log.debug('report_job_create: Processing')
 
             helpers.generate_general_report(path, filename, None, None, organisation)
            
             report_job.status = constants.Statuses.Generated
             model.Session.commit()
+            log.debug('report_job_create: Generated')
 
             user_emails = [] 
             if data_dict.get('user_roles'):               
@@ -96,6 +98,7 @@ def report_job_create(context, data_dict):
                 }
                 mailer.send_scheduled_report_email(user_emails, 'scheduled_report', extra_vars)
                 report_job.status = constants.Statuses.EmailsSent
+                log.debug('report_job_create: EmailsSent')
             else:
                 report_job.status = constants.Statuses.NoEmails
                 
@@ -104,6 +107,10 @@ def report_job_create(context, data_dict):
         else:
             errors = validated_data_dict
     except Exception, e:
+        log.debug('report_job_create: Failed')
+        log.debug('File Path: {0}'.format(file_path))
+        log.debug('user_emails: {0}'.format(user_emails))
+        log.debug('extra_vars: {0}'.format(extra_vars))
         report_job.status = constants.Statuses.Failed
         model.Session.commit()
         log.error(e)
