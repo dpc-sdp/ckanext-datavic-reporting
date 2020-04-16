@@ -19,6 +19,11 @@ Use the following paster command to initialise the tables:
 
 * Replacing `production.ini` with the respective CKAN .ini file to be used.
 
+### Create scheduled reporting frequencies
+
+The scheduled reporting frequencies list is configurable comma seperated string from the ckan admin config page /ckan-admin/config
+Each frequencies is separated by a comma
+
 ## Creating Scheduled Report Job
 
 To create the scheduled report job a paster command is used.

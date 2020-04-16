@@ -382,3 +382,14 @@ def get_file_type(filename):
         ctype = "application/octet-stream"
     
     return ctype  
+
+def get_scheduled_report_frequencies():
+    frequencies = toolkit.config.get('ckan.datavic_reporting.scheduled_reporting_frequencies', []).split(',')
+    return [frequency.lower() for frequency in frequencies]
+
+def get_scheduled_report_frequencies_list():
+    frequencies = []
+    for frequency in get_scheduled_report_frequencies():
+        frequencies.append({'value': frequency, 'text': frequency.capitalize()})
+
+    return frequencies

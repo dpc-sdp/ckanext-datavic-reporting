@@ -1,6 +1,6 @@
 import ckan.plugins.toolkit as toolkit
 from ckan.plugins.toolkit import Invalid
-import constants
+import helpers
 
 
 def report_type_validator(report_type):
@@ -28,7 +28,7 @@ def sub_org_ids_validator(sub_org_ids, context):
 
 
 def frequency_validator(frequency):
-    if frequency not in constants.Frequencies.List:
+    if frequency not in helpers.get_scheduled_report_frequencies():
         raise Invalid('Invalid frequency')
     return frequency
 
