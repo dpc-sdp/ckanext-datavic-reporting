@@ -1,0 +1,11 @@
+{% ckan_extends %}
+
+{% block admin_form %}
+    {{ super() }}
+    {{ form.textarea(
+        'ckan.datavic_reporting.scheduled_reporting_frequencies',
+        id='field-ckan.datavic_reporting.scheduled_reporting_frequencies',
+        label=_('Scheduled Reporting Frequencies'),
+        value=data['ckan.datavic_reporting.scheduled_reporting_frequencies'],
+        error=errors['ckan.datavic_reporting.scheduled_reporting_frequencies']) }}
+{% endblock %}

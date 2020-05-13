@@ -39,15 +39,15 @@ class CreateScheduledReportJob(CkanCommand):
         log = logging.getLogger(__name__)
         from ckan import model
         from ckan.plugins import toolkit
-        import constants     
-        import os
+        import constants
         
         if len(self.args) != 1:
             log.error("You must specify the scheduled report state eg. Monthly or Yearly")
             return
         
-        frequency = self.args[0].lower()       
-        if frequency in constants.Frequencies.List:
+        frequency = self.args[0].lower()   
+        try:
+            toolkit.get_validator('frequency_validator')(frequency)
             # We'll need a sysadmin user to perform most of the actions
             # We will use the sysadmin site user (named as the site_id)
             context = {'model':model,'session':model.Session,'ignore_auth':True}
@@ -64,5 +64,6 @@ class CreateScheduledReportJob(CkanCommand):
                 result = toolkit.get_action('report_job_create')(context, data_dict=report_schedule)
                 if not result:
                     log.error("Error creating report job: {0}".format(result))
-        else:
-            log.error("Unknown scheduled report frequency {0}".format(frequency))
+        except Exception as ex:
+            log.error("Error running scheduled report frequency {0}".format(frequency))
+            log.error("Error: {0}".format(ex))

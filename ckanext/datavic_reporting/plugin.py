@@ -17,11 +17,21 @@ class DataVicReportingPlugin(p.SingletonPlugin):
     p.implements(p.IValidators, inherit=True)
 
     # IConfigurer
-
     def update_config(self, config_):
         toolkit.add_template_directory(config_, 'templates')
         toolkit.add_public_directory(config_, 'public')
         toolkit.add_resource('fanstatic', 'datavic_reporting')
+
+    ## IConfigurer interface
+    def update_config_schema(self, schema):
+        schema.update({
+            'ckan.datavic_reporting.scheduled_reporting_frequencies': [
+                toolkit.get_validator('ignore_missing'),
+                unicode
+            ]
+        })
+
+        return schema
 
     # IAuthFunctions
     def get_auth_functions(self):
@@ -86,6 +96,7 @@ class DataVicReportingPlugin(p.SingletonPlugin):
             'user_report_get_organisations': helpers.get_organisation_list,
             'get_report_schedules': helpers.get_report_schedules,
             'get_report_schedule_organisation_list': helpers.get_report_schedule_organisation_list,
+            'get_scheduled_report_frequencies_list': helpers.get_scheduled_report_frequencies_list
         }
 
     # IActions
