@@ -1,11 +1,17 @@
 import ckan.plugins.toolkit as toolkit
 import ckan.model as model
+from ckan.lib.navl.dictization_functions import unflatten
+from ckan.logic import clean_dict, tuplize_dict, parse_params
 from model import GroupTreeNode
 import datetime
 import csv
 import calendar
 from dateutil import parser
 import math
+import authorisation
+import os
+from pylons import response
+import mimetypes
 import logging
 
 log = logging.getLogger(__name__)
@@ -16,7 +22,16 @@ def get_context():
         'model': model,
         'session': model.Session,
         'user': toolkit.c.user,
+        'auth_user_obj': get_user()
     }
+
+
+def get_user():
+    return toolkit.c.userobj
+
+
+def get_username():
+    return get_user().name
 
 
 def user_report_get_years():
@@ -63,12 +78,34 @@ def get_report_date_range(year, month):
     return start_date, end_date
 
 
-def get_top_level_organisation_list_for_user():
-    organisations = [{'value': '', 'text': 'All Organisations'}]
+def get_organisation_list():
+    organisations = []
+    top_level_organisations = get_top_level_organisation_list()
+    if authorisation.is_sysadmin():
+        organisations = top_level_organisations
+    elif authorisation.has_user_permission_for_some_org(get_username(), 'admin'):
+        for user_organisation in get_organisation_list_for_user('admin'):
+            organisations.append({'value': user_organisation.get('name'), 'text': user_organisation.get('display_name')})
+
+    organisations.insert(0, {'value': 'all-organisations', 'text': 'All Organisations'})
+    return organisations
+
+
+def get_top_level_organisation_list():
+    organisations = []
     for organisation in model.Group.get_top_level_groups('organization'):
         organisations.append({'value': organisation.name, 'text': organisation.display_name})
 
     return organisations
+
+
+def get_organisation_list_for_user(permission):
+    try:
+        return toolkit.get_action('organization_list_for_user')(get_context(), {'permission': permission})
+    except Exception as e:
+        log.error('*** Failed to retrieve organization_list_for_user {0}'.format(get_username()))
+        log.error(e)
+        return []
 
 
 def get_organisation(organisation_name):
@@ -83,11 +120,24 @@ def get_organisation_children(organisation_name):
 
 
 def get_organisation_children_names(organisation_name):
-    if not organisation_name:
-        return None
-    organisation_names = [organisation_name]
-    for group_id, group_name, group_title, parent_id in get_organisation_children(organisation_name):
-        organisation_names.append(group_name)
+    organisation_names = []
+
+    if authorisation.is_sysadmin():
+        if organisation_name != 'all-organisations':
+            organisation_names.append(organisation_name)
+            for group_id, group_name, group_title, parent_id in get_organisation_children(organisation_name):
+                organisation_names.append(group_name)
+    elif authorisation.has_user_permission_for_some_org(get_username(), 'admin'):
+        user_organisations = get_organisation_list_for_user('admin')
+        if organisation_name == 'all-organisations':
+            for user_organisation in user_organisations:
+                organisation_names.append(user_organisation.get('name'))
+        else:
+            organisation_names.append(organisation_name)
+            for group_id, group_name, group_title, parent_id in get_organisation_children(organisation_name):
+                for user_organisation in user_organisations:
+                    if user_organisation.get('name') == group_name:
+                        organisation_names.append(group_name)
 
     return organisation_names
 
@@ -97,7 +147,7 @@ def get_organisation_node(organisation_name):
     if not organisation:
         return None
     nodes = {}
-    root_node = nodes[organisation.id] = GroupTreeNode({'id': '', 'title': 'All Sub Organisations'})
+    root_node = nodes[organisation.id] = GroupTreeNode({'id': 'all-sub-organisations', 'title': 'All Sub Organisations'})
 
     for group_id, group_name, group_title, parent_id in organisation.get_children_group_hierarchy('organization'):
         node = GroupTreeNode({'id': group_name, 'title': group_title})
@@ -115,19 +165,29 @@ def get_organisation_node_tree(organisation_name):
     if not root_node:
         return organisation_children
 
-    buildOrganisationTree(organisation_children, root_node)
+    user_organisations = get_organisation_list_for_user('admin')
+    buildOrganisationTree(user_organisations, organisation_children, root_node)
     return organisation_children
 
 
-def buildOrganisationTree(organisation_tree, organisation, ansestors=0):
+def has_access_to_organisation(user_organisations, organisation_name):
+    for user_organisation in user_organisations:
+        if user_organisation.get('name') == organisation_name or organisation_name == 'all-sub-organisations':
+            return True
+
+    return False
+
+
+def buildOrganisationTree(user_organisations, organisation_tree, organisation, ansestors=0):
     dashes = '-' * ansestors
     text = dashes + str(organisation['title'])
-    tree_node = {'value': organisation['id'], 'text': text}
+    has_access = has_access_to_organisation(user_organisations, organisation['id'])
+    tree_node = {'value': organisation['id'], 'text': text, 'has_access': has_access}
     organisation_tree.append(tree_node)
     if len(organisation['children']) > 0:
         ansestors += 1
         for child_organisation in organisation['children']:
-            buildOrganisationTree(organisation_tree, child_organisation, ansestors)
+            buildOrganisationTree(user_organisations, organisation_tree, child_organisation, ansestors)
     else:
         ansestors = 0
 
@@ -149,23 +209,22 @@ def get_package_search(data_dict):
     try:
         return toolkit.get_action('package_search')(get_context(), data_dict)
     except Exception as e:
-        log.debug(
-            '*** Failed to retrieve package_search query {0}'.format(data_dict))
-        log.debug(e)
+        log.error('*** Failed to retrieve package_search query {0}'.format(data_dict))
+        log.error(e)
         return None
 
 
 def get_dataset_data(start_date, end_date, start_offset, organisation_names):
     date_query = ''
     if start_date and end_date:
-        date_query = '(metadata_created:[{0}T00:00:00.000Z TO {1}T23:59:59.999Z] OR metadata_modified:[{0}T00:00:00.000Z TO {1}T23:59:59.999Z]) AND '.format(start_date, end_date)
+        date_query = '(metadata_created:[{0}T00:00:00.000Z TO {1}T23:59:59.999Z] OR metadata_modified:[{0}T00:00:00.000Z TO {1}T23:59:59.999Z]) AND'.format(start_date, end_date)
     elif end_date:
-        date_query = '(metadata_created:[* TO {0}T23:59:59.999Z] OR metadata_modified:[* TO {0}T23:59:59.999Z]) AND '.format(end_date)
+        date_query = '(metadata_created:[* TO {0}T23:59:59.999Z] OR metadata_modified:[* TO {0}T23:59:59.999Z]) AND'.format(end_date)
     elif start_date:
-        date_query = '(metadata_created:[{0}T00:00:00.000Z TO *] OR metadata_modified:[{0}T00:00:00.000Z TO *]) AND '.format(start_date)
+        date_query = '(metadata_created:[{0}T00:00:00.000Z TO *] OR metadata_modified:[{0}T00:00:00.000Z TO *]) AND'.format(start_date)
 
     workflow_query = '(workflow_status:published OR workflow_status:archived)'
-    organisation_query = ' AND (organization:{0})'.format(' OR organization:'.join(map(str, organisation_names))) if organisation_names else ''
+    organisation_query = 'AND (organization:{0})'.format(' OR organization:'.join(map(str, organisation_names))) if organisation_names else ''
     data_dict = {
         'q': '{0} {1} {2}'.format(date_query, workflow_query, organisation_query),
         'sort': 'metadata_created asc, metadata_modified asc',
@@ -173,6 +232,7 @@ def get_dataset_data(start_date, end_date, start_offset, organisation_names):
         'start': start_offset,
         'rows': 1000
     }
+    log.debug('Package Search Query: {0}'.format(data_dict))
     return get_package_search(data_dict)
 
 
@@ -223,8 +283,15 @@ def write_csv_row(csv_writer, dataset_list):
                 csv_writer.writerow(row + res_list)
 
 
-def generate_general_report(filename, start_date, end_date, organisation):
-    csv_writer = csv.writer(open('/tmp/' + filename, 'wb'))
+def generate_general_report(path, filename, start_date, end_date, organisation):
+    # Create directory structure if it does not exist
+    try:
+        os.makedirs(path)
+    except OSError as e:
+        if not os.path.isdir(path):
+            log.error(e)
+            raise
+    csv_writer = csv.writer(open(path + filename, 'wb'))
 
     header = [
         'Title',
@@ -259,3 +326,70 @@ def generate_general_report(filename, start_date, end_date, organisation):
 
         for start_offset in range(start, stop, step):
             get_general_report_data(csv_writer, start_date, end_date, start_offset, organisation_names)
+
+
+def clean_params(params):
+    return clean_dict(unflatten(tuplize_dict(parse_params(params))))
+
+
+def get_report_schedules(state=None):
+    return toolkit.get_action('report_schedule_list')({}, {'state': state})
+
+
+def get_report_schedule_organisation_list():
+    organisations = []
+    top_level_organisations = get_top_level_organisation_list()
+    if authorisation.is_sysadmin():
+        organisations = top_level_organisations
+
+    organisations.insert(0, {'value': '', 'text': 'Please select'})
+    return organisations
+
+
+def get_organisation_role_emails(context, id, role):
+    user_emails = []
+    data_dict = {
+        "id": id,
+        "include_dataset_count": False,
+        "include_extras": False,
+        "include_users": True,
+        "include_groups": False,
+        "include_tags": False,
+        "include_followers": False
+    }   
+    organisation = toolkit.get_action('organization_show')(context, data_dict=data_dict)   
+    for org_user in organisation.get('users'):
+        if(org_user.get('capacity') == role):           
+            user = toolkit.get_action('user_show')(context, data_dict={"id":org_user.get('id')})
+            user_email = user.get('email')
+            if user_email:
+                user_emails.append(user_email)
+    return user_emails if user_emails else None
+
+
+def download_file(filepath):
+    fh = open(filepath)
+    filename = os.path.basename(filepath)
+    ctype = get_file_type(filename)
+    response.headers[b'Content-Type'] = b'{0}; charset=utf-8'.format(ctype)
+    response.headers[b'Content-Disposition'] = b"attachment;filename={0}".format(filename)
+    return fh.read()
+
+
+def get_file_type(filename):
+    ctype, encoding = mimetypes.guess_type(filename)
+    if ctype is None or encoding is not None:
+        ctype = "application/octet-stream"
+    
+    return ctype  
+
+def get_scheduled_report_frequencies():
+    frequencies = toolkit.config.get('ckan.datavic_reporting.scheduled_reporting_frequencies', []).split(',')
+    return [frequency.lower() for frequency in frequencies]
+
+def get_scheduled_report_frequencies_list():
+    frequencies = []
+    for frequency in get_scheduled_report_frequencies():
+        frequencies.append({'value': frequency, 'text': frequency.capitalize()})
+
+    return frequencies

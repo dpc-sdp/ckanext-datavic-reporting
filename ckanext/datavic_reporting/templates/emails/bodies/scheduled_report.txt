@@ -1,0 +1,11 @@
+Hi,
+
+The "{{ org_id }}" scheduled report for "{{ date }}" has been created.
+
+You are receiving this notification because you are member of the mentioned organization or have been invited to view the report.
+
+--
+
+Best Regards,
+{{ site_title }} Team -- {{ site_url }}
+

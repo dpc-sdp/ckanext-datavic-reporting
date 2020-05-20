@@ -10,8 +10,11 @@
           {{ h.build_nav_icon('user_dashboard_organizations', _('My Organizations')) }}
           {{ h.build_nav_icon('user_dashboard_groups', _('My Groups')) }}
           {{ h.build_nav_icon('user_dashboard', _('News feed')) }}
-          {% if h.check_access('sysadmin') %}
-            {{ h.build_nav_icon('user_dashboard_reports', _('Reports')) }}
+          {% if h.check_access('user_dashboard_reports') %}
+            {{ h.build_nav_icon('user_dashboard_reports', _('Reports')) }}         
+          {% endif %}
+          {% if h.check_access('user_report_schedules') %}        
+            {{ h.build_nav_icon('user_report_schedules', _('Report schedules')) }}
           {% endif %}
         </ul>
       </header>
