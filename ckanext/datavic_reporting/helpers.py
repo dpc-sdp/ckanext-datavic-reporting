@@ -223,10 +223,9 @@ def get_dataset_data(start_date, end_date, start_offset, organisation_names):
     elif start_date:
         date_query = '(metadata_created:[{0}T00:00:00.000Z TO *] OR metadata_modified:[{0}T00:00:00.000Z TO *]) AND'.format(start_date)
 
-    workflow_query = '(workflow_status:published OR workflow_status:archived)'
-    organisation_query = 'AND (organization:{0})'.format(' OR organization:'.join(map(str, organisation_names))) if organisation_names else ''
+    organisation_query = '(organization:{0})'.format(' OR organization:'.join(map(str, organisation_names))) if organisation_names else ''
     data_dict = {
-        'q': '{0} {1} {2}'.format(date_query, workflow_query, organisation_query),
+        'q': '{0} {1}'.format(date_query, organisation_query),
         'sort': 'metadata_created asc, metadata_modified asc',
         'include_private': True,
         'start': start_offset,
