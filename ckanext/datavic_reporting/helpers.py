@@ -215,17 +215,19 @@ def get_package_search(data_dict):
 
 
 def get_dataset_data(start_date, end_date, start_offset, organisation_names):
-    date_query = ''
+    query = []
     if start_date and end_date:
-        date_query = '(metadata_created:[{0}T00:00:00.000Z TO {1}T23:59:59.999Z] OR metadata_modified:[{0}T00:00:00.000Z TO {1}T23:59:59.999Z]) AND'.format(start_date, end_date)
+        query.append('(metadata_created:[{0}T00:00:00.000Z TO {1}T23:59:59.999Z] OR metadata_modified:[{0}T00:00:00.000Z TO {1}T23:59:59.999Z])'.format(start_date, end_date))
     elif end_date:
-        date_query = '(metadata_created:[* TO {0}T23:59:59.999Z] OR metadata_modified:[* TO {0}T23:59:59.999Z]) AND'.format(end_date)
+        query.append('(metadata_created:[* TO {0}T23:59:59.999Z] OR metadata_modified:[* TO {0}T23:59:59.999Z])'.format(end_date))
     elif start_date:
-        date_query = '(metadata_created:[{0}T00:00:00.000Z TO *] OR metadata_modified:[{0}T00:00:00.000Z TO *]) AND'.format(start_date)
-
-    organisation_query = '(organization:{0})'.format(' OR organization:'.join(map(str, organisation_names))) if organisation_names else ''
+        query.append('(metadata_created:[{0}T00:00:00.000Z TO *] OR metadata_modified:[{0}T00:00:00.000Z TO *])'.format(start_date))
+    
+    if organisation_names:
+        query.append('(organization:{0})'.format(' OR organization:'.join(map(str, organisation_names))))
+    
     data_dict = {
-        'q': '{0} {1}'.format(date_query, organisation_query),
+        'q': ' AND '.join(query),
         'sort': 'metadata_created asc, metadata_modified asc',
         'include_private': True,
         'start': start_offset,
