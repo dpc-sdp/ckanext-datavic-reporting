@@ -1,19 +1,25 @@
-import ckan.plugins.toolkit as toolkit
+import authorisation
+import calendar
 import ckan.model as model
+import ckan.plugins.toolkit as toolkit
+import csv
+import datetime
+import logging
+import math
+import mimetypes
+import os
+import pytz
+import sqlalchemy
+
 from ckan.lib.navl.dictization_functions import unflatten
 from ckan.logic import clean_dict, tuplize_dict, parse_params
-from model import GroupTreeNode
-import datetime
-import csv
-import calendar
 from dateutil import parser
-import math
-import authorisation
-import os
+from model import GroupTreeNode
 from pylons import response
-import mimetypes
-import logging
 
+_and_ = sqlalchemy.and_
+_session_ = model.Session
+config = toolkit.config
 log = logging.getLogger(__name__)
 
 
@@ -384,9 +390,11 @@ def get_file_type(filename):
     
     return ctype  
 
+
 def get_scheduled_report_frequencies():
     frequencies = toolkit.config.get('ckan.datavic_reporting.scheduled_reporting_frequencies', []).split(',')
     return [frequency.lower() for frequency in frequencies]
+
 
 def get_scheduled_report_frequencies_list():
     frequencies = []
@@ -394,3 +402,49 @@ def get_scheduled_report_frequencies_list():
         frequencies.append({'value': frequency, 'text': frequency.capitalize()})
 
     return frequencies
+
+
+def display_member_state(member):
+    state = member.state
+    if state == 'pending':
+        state += ' (Review required)' if not member.reset_key else ' (Invite not active)'
+    return state
+
+
+def generate_member_report(path, filename):
+    # Create directory structure if it does not exist
+    try:
+        os.makedirs(path)
+    except OSError as e:
+        if not os.path.isdir(path):
+            log.error(e)
+            raise
+    csv_writer = csv.writer(open(path + filename, 'wb'))
+
+    header_row = [
+        'Organisation',
+        'Username',
+        'Email',
+        'Capacity',
+        'State',
+        'Created'
+    ]
+
+    csv_writer.writerow(header_row)
+
+    members = toolkit.get_action('organisation_members')(get_context(), {})
+
+    ckan_timezone = config.get('ckan.display_timezone', None)
+    tz = pytz.timezone('UTC')
+
+    for member in members:
+        row = [
+            member.organisation_name.encode('ascii', 'ignore'),
+            member.username.encode('ascii', 'ignore'),
+            member.email.encode('ascii', 'ignore'),
+            member.capacity.encode('ascii', 'ignore'),
+            display_member_state(member).encode('ascii', 'ignore'),
+            tz.localize(member.created).astimezone(pytz.timezone(ckan_timezone))
+        ]
+
+        csv_writer.writerow(row)
