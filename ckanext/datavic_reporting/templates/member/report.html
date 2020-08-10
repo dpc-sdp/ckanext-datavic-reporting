@@ -1,0 +1,53 @@
+{% extends "user/dashboard.html" %}
+
+{% block primary_content_inner %}
+
+    <h1>Organisation Member Report</h1>
+
+    {% if members %}
+        <p align="center">
+            <a href="{{ h.url_for('download_organisation_member_report') }}" class="btn btn-primary">
+                <i class="fa fa-file-text-o"></i>
+                Download as CSV
+            </a>
+        </p>
+
+        <h2>Total: {{ members|length }}</h2>
+
+        <small>
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <th>Organisation</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Capacity</th>
+                    <th>State</th>
+                    <th>Created</th>
+                </thead>
+                <tbody>
+                    {% for member in members %}
+                    <tr>
+                        <td>
+                            <a href="{{ h.url_for('organization_read', id=member.organisation_name) }}">
+                                {{ member.organisation_name }}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="/user/{{ member.username }}">
+                                {{ member.username }}
+                            </a>
+                        </td>
+                        <td>{{ member.email }}</td>
+                        <td>{{ member.capacity }}</td>
+                        <td>{{ h.display_member_state(member) }}</td>
+                        <td>{% snippet 'snippets/local_friendly_datetime.html', datetime_obj=member.created %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </small>
+    {% else %}
+        <p>No member data to report.</p>
+    {% endif %}
+
+{% endblock %}
