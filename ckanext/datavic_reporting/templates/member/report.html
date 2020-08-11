@@ -1,18 +1,70 @@
 {% extends "user/dashboard.html" %}
+{% import 'macros/form.html' as form %}
 
 {% block primary_content_inner %}
 
+    {% set organisations = h.user_report_get_organisations() %}
+    {% set sub_organisations = h.get_organisation_node_tree(organisation) if organisation else None %}
+
+    {% resource 'datavic_reporting/datavic_reporting.js' %}
+
     <h1>Organisation Member Report</h1>
 
-    {% if members %}
-        <p align="center">
-            <a href="{{ h.url_for('download_organisation_member_report') }}" class="btn btn-primary">
-                <i class="fa fa-file-text-o"></i>
-                Download as CSV
-            </a>
-        </p>
+    <div class="reporting-form-center">
+      <form action="{{ h.url_for('organisation_member_report') }}" method="get" class="form-horizontal">
 
-        <h2>Total: {{ members|length }}</h2>
+        {{ form.select(
+          'organisation',
+          id='general_date_range_organisations',
+          label=_('Organisation'),
+          options=organisations,
+          selected=organisation
+        ) }}
+
+        {{ form.select(
+          'sub_organisation',
+          id='general_date_range_sub_organisations',
+          label=_('Sub Organisation'),
+          options=sub_organisations or [],
+          selected=sub_organisation if sub_organisation else '',
+          classes=['no-hide'] if organisations and sub_organisations and sub_organisations|length > 1 else []
+        ) }}
+
+        <div class="report-options">
+            <input type="radio" id="option-display-report" name="view" value="display" /> Display
+            <input type="radio" id="option-download-report" name="view" value="download" /> Download
+        </div>
+
+        <div class="form-actions">
+            <button id="display-report" class="btn btn-primary">
+                <i class="fa fa-table"></i>
+                Display
+            </button>
+            <button id="download-report" class="btn btn-secondary">
+                <i class="fa fa-file-text-o"></i>
+                Download
+            </button>
+        </div>
+      </form>
+    </div>
+
+    {% if members %}
+        <hr />
+        {% if organisation and report_title %}
+            {% if sub_organisation == 'all-sub-organisations' %}
+                {% set title = organisation.title %}
+            {% else %}
+                {% set title = sub_organisation.title %}
+            {% endif %}
+            <h4>
+                {{ report_title }}
+                {%- if sub_organisation == 'all-sub-organisations' %}
+                <small>(inc. all sub-organisations)</small>
+                {%- endif -%}
+            </h4>
+        {% endif %}
+
+        <h5>Total: {{ members|length }}</h5>
 
         <small>
             <table class="table table-bordered table-striped">
@@ -37,7 +89,7 @@
                                 {{ member.username }}
                             </a>
                         </td>
-                        <td>{{ member.email }}</td>
+                        <td><a href="mailto:{{ member.email }}">{{ member.email }}</a></td>
                         <td>{{ member.capacity }}</td>
                         <td>{{ h.display_member_state(member) }}</td>
                         <td>{% snippet 'snippets/local_friendly_datetime.html', datetime_obj=member.created %}</td>
@@ -46,7 +98,7 @@
                 </tbody>
             </table>
         </small>
-    {% else %}
+    {% elif organisation %}
         <p>No member data to report.</p>
     {% endif %}
 

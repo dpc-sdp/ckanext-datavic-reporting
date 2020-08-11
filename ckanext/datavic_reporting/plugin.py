@@ -66,9 +66,6 @@ class DataVicReportingPlugin(p.SingletonPlugin):
         map.connect('organisation_member_report', '/dashboard/member_report',
                     controller='ckanext.datavic_reporting.member_report_controller:MemberReportController',
                     action='report')
-        map.connect('download_organisation_member_report', '/dashboard/download_member_report',
-                    controller='ckanext.datavic_reporting.member_report_controller:MemberReportController',
-                    action='download_report')
 
         # Scheduled reports
         map.connect('user_report_schedules', '/dashboard/report-schedules',
@@ -105,7 +102,8 @@ class DataVicReportingPlugin(p.SingletonPlugin):
             'get_report_schedules': helpers.get_report_schedules,
             'get_report_schedule_organisation_list': helpers.get_report_schedule_organisation_list,
             'get_scheduled_report_frequencies_list': helpers.get_scheduled_report_frequencies_list,
-            'display_member_state': helpers.display_member_state
+            'display_member_state': helpers.display_member_state,
+            'get_organisation_node_tree': helpers.get_organisation_node_tree
         }
 
     # IActions
