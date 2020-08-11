@@ -411,7 +411,7 @@ def display_member_state(member):
     return state
 
 
-def generate_member_report(path, filename):
+def generate_member_report(path, filename, organisations):
     # Create directory structure if it does not exist
     try:
         os.makedirs(path)
@@ -432,7 +432,7 @@ def generate_member_report(path, filename):
 
     csv_writer.writerow(header_row)
 
-    members = toolkit.get_action('organisation_members')(get_context(), {})
+    members = toolkit.get_action('organisation_members')(get_context(), organisations)
 
     ckan_timezone = config.get('ckan.display_timezone', None)
     tz = pytz.timezone('UTC')
