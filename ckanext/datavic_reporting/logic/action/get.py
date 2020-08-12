@@ -74,7 +74,8 @@ def organisation_members(context, organisations):
 
         conditions = [
             Group.type == 'organization',
-            Member.table_name == 'user'
+            Member.table_name == 'user',
+            Member.state == 'active'
         ]
 
         if len(organisations) > 0:
@@ -107,6 +108,7 @@ def organisation_members(context, organisations):
             conditions.append(authenticated_member.table_name == 'user')
             conditions.append(authenticated_member.capacity == 'admin')
             conditions.append(authenticated_member.table_id == user.id)
+            conditions.append(authenticated_member.state == 'active')
 
             return (
                 base_query.filter(
