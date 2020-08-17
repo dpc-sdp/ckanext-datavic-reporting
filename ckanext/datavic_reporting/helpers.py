@@ -411,7 +411,7 @@ def display_member_state(member):
     return state
 
 
-def generate_member_report(path, filename, organisations):
+def generate_member_report(path, filename, data_dict):
     # Create directory structure if it does not exist
     try:
         os.makedirs(path)
@@ -432,7 +432,7 @@ def generate_member_report(path, filename, organisations):
 
     csv_writer.writerow(header_row)
 
-    members = toolkit.get_action('organisation_members')(get_context(), organisations)
+    members = toolkit.get_action('organisation_members')(get_context(), data_dict)
 
     ckan_timezone = config.get('ckan.display_timezone', None)
     tz = pytz.timezone('UTC')
@@ -448,3 +448,12 @@ def generate_member_report(path, filename, organisations):
         ]
 
         csv_writer.writerow(row)
+
+
+def get_user_states():
+    return [
+        {'text': 'All states', 'value': ''},
+        {'text': 'Active', 'value': 'active'},
+        {'text': 'Pending ((Invite not active)', 'value': 'pending_invited'},
+        {'text': 'Pending (Review required)', 'value': 'pending_request'}
+    ]
