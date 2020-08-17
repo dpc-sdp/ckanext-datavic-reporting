@@ -54,11 +54,12 @@ def report_jobs(context, data_dict):
     return {'error': error}
 
 
-def organisation_members(context, organisations):
+def organisation_members(context, data_dict):
     """
 
     :param context:
-    :param organisations: A list of organisation names
+    :param data_dict:
+        A list of organisation names
     :return:
     """
     try:
@@ -78,8 +79,20 @@ def organisation_members(context, organisations):
             Member.state == 'active'
         ]
 
+        organisations = data_dict.get('organisations', [])
+        state = data_dict.get('state', None)
+
         if len(organisations) > 0:
             conditions.append(Group.name.in_(organisations))
+
+        if state == 'active':
+            conditions.append(User.state == 'active')
+        elif state == 'pending_invited':
+            conditions.append(User.state == 'pending')
+            conditions.append(User.reset_key != None)
+        elif state == 'pending_request':
+            conditions.append(User.state == 'pending')
+            conditions.append(User.reset_key == None)
 
         if authorisation.is_sysadmin():
             # Show all members for sysadmin users
@@ -93,7 +106,6 @@ def organisation_members(context, organisations):
                 .join(User, User.id == Member.table_id)
                 .order_by(Group.name.asc(), User.name.asc())
             ).all()
-
         else:
             toolkit.check_access('user_dashboard_reports', context, {})
 
