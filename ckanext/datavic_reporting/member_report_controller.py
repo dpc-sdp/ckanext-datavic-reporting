@@ -17,53 +17,56 @@ class MemberReportController(base.BaseController):
         if not user_dashboard_reports or not user_dashboard_reports.get('success'):
             abort(403, toolkit._('You are not Authorized'))
 
-    def download_report(self, organisations):
+    def download_report(self, data_dict):
         # Generate a CSV report
         path = '/tmp/'
         filename = 'member_report_{0}.csv'.format(datetime.now().isoformat())
         file_path = path + filename
 
-        helpers.generate_member_report(path, filename, organisations)
+        helpers.generate_member_report(path, filename, data_dict)
 
         return helpers.download_file(file_path)
 
     def extract_request_params(self):
-        organisations = None
-        report_title = toolkit._('All organisations')
-
         organisation = toolkit.request.GET.get('organisation', None)
         sub_organisation = toolkit.request.GET.get('sub_organisation', 'all-sub-organisations')
+
+        data_dict = {
+            'organisation': organisation,
+            'organisations': None,
+            'report_title': toolkit._('All organisations'),
+            'state': toolkit.request.GET.get('state', None),
+            'sub_organisation': sub_organisation,
+
+        }
 
         if organisation:
             if sub_organisation == 'all-sub-organisations':
                 # Get the organisation and all sub-organisation names
-                organisations = helpers.get_organisation_children_names(organisation)
+                data_dict['organisations'] = helpers.get_organisation_children_names(organisation)
                 if organisation != 'all-organisations':
-                    report_title = helpers.get_organisation(organisation).title
+                    data_dict['report_title'] = helpers.get_organisation(organisation).title
             else:
                 sub_org_info = helpers.get_organisation(sub_organisation)
-                organisations = [
+                data_dict['organisations'] = [
                     sub_org_info.name
                 ]
-                report_title = sub_org_info.title
+                data_dict['organisations'] = sub_org_info.title
 
-        return organisation, sub_organisation, report_title, organisations
+        return data_dict
 
     def report(self):
         self.check_user_access()
 
-        organisation, sub_organisation, report_title, organisations = self.extract_request_params()
+        data_dict = self.extract_request_params()
 
         view = toolkit.request.GET.get('view', 'display')
 
         if view == 'download':
-            return self.download_report(organisations)
+            # return self.download_report(organisations)
+            return self.download_report(data_dict)
         else:
-            vars = {
-                'organisation': organisation,
-                'sub_organisation': sub_organisation,
-                'report_title': report_title,
-                'members': toolkit.get_action('organisation_members')({}, organisations) if organisation else []
-            }
+            if data_dict['organisation']:
+                data_dict['members'] = toolkit.get_action('organisation_members')({}, data_dict)
 
-            return base.render('member/report.html', extra_vars=vars)
+        return base.render('member/report.html', extra_vars=data_dict)

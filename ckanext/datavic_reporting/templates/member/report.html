@@ -30,6 +30,14 @@
           classes=['no-hide'] if organisations and sub_organisations and sub_organisations|length > 1 else []
         ) }}
 
+        {{ form.select(
+          'state',
+          id='field-state',
+          label=_('State'),
+          options=h.get_user_states(),
+          selected=state or ''
+        ) }}
+
         <div class="report-options">
             <input type="radio" id="option-display-report" name="view" value="display" /> Display
             <input type="radio" id="option-download-report" name="view" value="download" /> Download
@@ -92,7 +100,7 @@
                         <td><a href="mailto:{{ member.email }}">{{ member.email }}</a></td>
                         <td>{{ member.capacity }}</td>
                         <td>{{ h.display_member_state(member) }}</td>
-                        <td>{% snippet 'snippets/local_friendly_datetime.html', datetime_obj=member.created %}</td>
+                        <td>{{ h.render_datetime(member.created, date_format='%d-%m-%Y', with_hours=True) }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

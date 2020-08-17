@@ -103,7 +103,8 @@ class DataVicReportingPlugin(p.SingletonPlugin):
             'get_report_schedule_organisation_list': helpers.get_report_schedule_organisation_list,
             'get_scheduled_report_frequencies_list': helpers.get_scheduled_report_frequencies_list,
             'display_member_state': helpers.display_member_state,
-            'get_organisation_node_tree': helpers.get_organisation_node_tree
+            'get_organisation_node_tree': helpers.get_organisation_node_tree,
+            'get_user_states': helpers.get_user_states,
         }
 
     # IActions
