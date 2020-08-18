@@ -96,7 +96,7 @@ def organisation_members(context, data_dict):
 
         if authorisation.is_sysadmin():
             # Show all members for sysadmin users
-            return (
+            members = (
                 base_query.filter(
                     _and_(
                         *conditions
@@ -105,7 +105,11 @@ def organisation_members(context, data_dict):
                 .join(Member, Member.group_id == Group.id)
                 .join(User, User.id == Member.table_id)
                 .order_by(Group.name.asc(), User.name.asc())
-            ).all()
+            )
+
+            #log.debug(str(members))
+
+            return members.all()
         else:
             toolkit.check_access('user_dashboard_reports', context, {})
 

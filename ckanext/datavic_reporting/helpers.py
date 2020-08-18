@@ -454,6 +454,6 @@ def get_user_states():
     return [
         {'text': 'All states', 'value': ''},
         {'text': 'Active', 'value': 'active'},
-        {'text': 'Pending ((Invite not active)', 'value': 'pending_invited'},
+        {'text': 'Pending (Invite not active)', 'value': 'pending_invited'},
         {'text': 'Pending (Review required)', 'value': 'pending_request'}
     ]

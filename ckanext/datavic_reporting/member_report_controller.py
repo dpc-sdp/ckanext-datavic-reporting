@@ -51,7 +51,7 @@ class MemberReportController(base.BaseController):
                 data_dict['organisations'] = [
                     sub_org_info.name
                 ]
-                data_dict['organisations'] = sub_org_info.title
+                data_dict['report_title'] = sub_org_info.title
 
         return data_dict
 
