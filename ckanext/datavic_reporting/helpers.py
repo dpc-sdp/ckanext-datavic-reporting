@@ -1,19 +1,25 @@
-import ckan.plugins.toolkit as toolkit
+import authorisation
+import calendar
 import ckan.model as model
+import ckan.plugins.toolkit as toolkit
+import csv
+import datetime
+import logging
+import math
+import mimetypes
+import os
+import pytz
+import sqlalchemy
+
 from ckan.lib.navl.dictization_functions import unflatten
 from ckan.logic import clean_dict, tuplize_dict, parse_params
-from model import GroupTreeNode
-import datetime
-import csv
-import calendar
 from dateutil import parser
-import math
-import authorisation
-import os
+from model import GroupTreeNode
 from pylons import response
-import mimetypes
-import logging
 
+_and_ = sqlalchemy.and_
+_session_ = model.Session
+config = toolkit.config
 log = logging.getLogger(__name__)
 
 
@@ -215,18 +221,19 @@ def get_package_search(data_dict):
 
 
 def get_dataset_data(start_date, end_date, start_offset, organisation_names):
-    date_query = ''
+    query = []
     if start_date and end_date:
-        date_query = '(metadata_created:[{0}T00:00:00.000Z TO {1}T23:59:59.999Z] OR metadata_modified:[{0}T00:00:00.000Z TO {1}T23:59:59.999Z]) AND'.format(start_date, end_date)
+        query.append('(metadata_created:[{0}T00:00:00.000Z TO {1}T23:59:59.999Z] OR metadata_modified:[{0}T00:00:00.000Z TO {1}T23:59:59.999Z])'.format(start_date, end_date))
     elif end_date:
-        date_query = '(metadata_created:[* TO {0}T23:59:59.999Z] OR metadata_modified:[* TO {0}T23:59:59.999Z]) AND'.format(end_date)
+        query.append('(metadata_created:[* TO {0}T23:59:59.999Z] OR metadata_modified:[* TO {0}T23:59:59.999Z])'.format(end_date))
     elif start_date:
-        date_query = '(metadata_created:[{0}T00:00:00.000Z TO *] OR metadata_modified:[{0}T00:00:00.000Z TO *]) AND'.format(start_date)
-
-    workflow_query = '(workflow_status:published OR workflow_status:archived)'
-    organisation_query = 'AND (organization:{0})'.format(' OR organization:'.join(map(str, organisation_names))) if organisation_names else ''
+        query.append('(metadata_created:[{0}T00:00:00.000Z TO *] OR metadata_modified:[{0}T00:00:00.000Z TO *])'.format(start_date))
+    
+    if organisation_names:
+        query.append('(organization:{0})'.format(' OR organization:'.join(map(str, organisation_names))))
+    
     data_dict = {
-        'q': '{0} {1} {2}'.format(date_query, workflow_query, organisation_query),
+        'q': ' AND '.join(query),
         'sort': 'metadata_created asc, metadata_modified asc',
         'include_private': True,
         'start': start_offset,
@@ -383,9 +390,11 @@ def get_file_type(filename):
     
     return ctype  
 
+
 def get_scheduled_report_frequencies():
     frequencies = toolkit.config.get('ckan.datavic_reporting.scheduled_reporting_frequencies', []).split(',')
     return [frequency.lower() for frequency in frequencies]
+
 
 def get_scheduled_report_frequencies_list():
     frequencies = []
@@ -393,3 +402,58 @@ def get_scheduled_report_frequencies_list():
         frequencies.append({'value': frequency, 'text': frequency.capitalize()})
 
     return frequencies
+
+
+def display_member_state(member):
+    state = member.state
+    if state == 'pending':
+        state += ' (Review required)' if not member.reset_key else ' (Invite not active)'
+    return state
+
+
+def generate_member_report(path, filename, data_dict):
+    # Create directory structure if it does not exist
+    try:
+        os.makedirs(path)
+    except OSError as e:
+        if not os.path.isdir(path):
+            log.error(e)
+            raise
+    csv_writer = csv.writer(open(path + filename, 'wb'))
+
+    header_row = [
+        'Organisation',
+        'Username',
+        'Email',
+        'Capacity',
+        'State',
+        'Created'
+    ]
+
+    csv_writer.writerow(header_row)
+
+    members = toolkit.get_action('organisation_members')(get_context(), data_dict)
+
+    ckan_timezone = config.get('ckan.display_timezone', None)
+    tz = pytz.timezone('UTC')
+
+    for member in members:
+        row = [
+            member.organisation_name.encode('ascii', 'ignore'),
+            member.username.encode('ascii', 'ignore'),
+            member.email.encode('ascii', 'ignore'),
+            member.capacity.encode('ascii', 'ignore'),
+            display_member_state(member).encode('ascii', 'ignore'),
+            tz.localize(member.created).astimezone(pytz.timezone(ckan_timezone))
+        ]
+
+        csv_writer.writerow(row)
+
+
+def get_user_states():
+    return [
+        {'text': 'All states', 'value': ''},
+        {'text': 'Active', 'value': 'active'},
+        {'text': 'Pending (Invite not active)', 'value': 'pending_invited'},
+        {'text': 'Pending (Review required)', 'value': 'pending_request'}
+    ]

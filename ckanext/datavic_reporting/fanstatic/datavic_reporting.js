@@ -1,7 +1,11 @@
 jQuery(document).ready(function () {
 
     general_date_range_sub_organisations = $('#general_date_range_sub_organisations');
-    general_date_range_sub_organisations.parent().parent().hide();
+
+
+    if (!jQuery(general_date_range_sub_organisations).parent().parent().hasClass('no-hide')) {
+        general_date_range_sub_organisations.parent().parent().hide();
+    }
 
     jQuery('#general_date_range_organisations').on('change', function (e) {
         getSubOrganisations(this.value, general_date_range_sub_organisations);
@@ -32,4 +36,16 @@ jQuery(document).ready(function () {
             }
         })
     }
+
+    jQuery("#display-report").on('click', function() {
+        jQuery("#option-display-report").prop("checked", true);
+        jQuery(this).closest("form").submit();
+        return false;
+    });
+
+    jQuery("#download-report").on('click', function() {
+        jQuery("#option-download-report").prop("checked", true);
+        jQuery(this).closest("form").submit();
+        return false;
+    });
 });

@@ -1,7 +1,17 @@
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
-from ckanext.datavic_reporting.report_models import ReportSchedule, ReportJob
+import logging
+import sqlalchemy
 from ckan.logic import side_effect_free
+from ckan.model.group import Group, Member
+from ckan.model.user import User
+from ckanext.datavic_reporting.report_models import ReportSchedule, ReportJob
+from ckanext.datavic_reporting import authorisation, helpers
+from sqlalchemy.orm import aliased
+
+_and_ = sqlalchemy.and_
+_session_ = model.Session
+log = logging.getLogger(__name__)
 
 
 @side_effect_free
@@ -42,3 +52,93 @@ def report_jobs(context, data_dict):
             error = str(e)
 
     return {'error': error}
+
+
+def organisation_members(context, data_dict):
+    """
+
+    :param context:
+    :param data_dict:
+        A list of organisation names
+    :return:
+    """
+    try:
+        base_query = _session_.query(
+            Group.name.label("organisation_name"),
+            User.name.label("username"),
+            User.email,
+            User.state,
+            User.created,
+            User.reset_key,
+            Member.capacity,
+        )
+
+        conditions = [
+            Group.type == 'organization',
+            Member.table_name == 'user',
+            Member.state == 'active'
+        ]
+
+        organisations = data_dict.get('organisations', [])
+        state = data_dict.get('state', None)
+
+        if len(organisations) > 0:
+            conditions.append(Group.name.in_(organisations))
+
+        if state == 'active':
+            conditions.append(User.state == 'active')
+        elif state == 'pending_invited':
+            conditions.append(User.state == 'pending')
+            conditions.append(User.reset_key != None)
+        elif state == 'pending_request':
+            conditions.append(User.state == 'pending')
+            conditions.append(User.reset_key == None)
+
+        if authorisation.is_sysadmin():
+            # Show all members for sysadmin users
+            members = (
+                base_query.filter(
+                    _and_(
+                        *conditions
+                    )
+                )
+                .join(Member, Member.group_id == Group.id)
+                .join(User, User.id == Member.table_id)
+                .order_by(Group.name.asc(), User.name.asc())
+            )
+
+            #log.debug(str(members))
+
+            return members.all()
+        else:
+            toolkit.check_access('user_dashboard_reports', context, {})
+
+            # For authenticated users who are an admin of at least one organisation
+            # only show members of organisations they are an admin of
+            user = helpers.get_user()
+
+            authenticated_member = aliased(Member, name='authenticated_member')
+            authenticated_user = aliased(User, name='authenticated_user')
+
+            # Only include organisations if authenticated user is an admin
+            conditions.append(authenticated_member.table_name == 'user')
+            conditions.append(authenticated_member.capacity == 'admin')
+            conditions.append(authenticated_member.table_id == user.id)
+            conditions.append(authenticated_member.state == 'active')
+
+            return (
+                base_query.filter(
+                    _and_(
+                        *conditions
+                    )
+                )
+                .join(Member, Member.group_id == Group.id)
+                .join(User, User.id == Member.table_id)
+                # Only include organisations if authenticated user is an admin
+                .join(authenticated_member, authenticated_member.group_id == Group.id)
+                .join(authenticated_user, authenticated_user.id == authenticated_member.table_id)
+                .order_by(Group.name.asc(), User.name.asc())
+            ).all()
+
+    except Exception as e:
+        log.error(str(e))

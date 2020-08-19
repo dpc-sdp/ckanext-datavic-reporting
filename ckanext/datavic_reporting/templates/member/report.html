@@ -1,0 +1,113 @@
+{% extends "user/dashboard.html" %}
+{% import 'macros/form.html' as form %}
+
+{% block primary_content_inner %}
+
+    {% set organisations = h.user_report_get_organisations() %}
+    {% set sub_organisations = h.get_organisation_node_tree(organisation) if organisation else None %}
+
+    {% resource 'datavic_reporting/datavic_reporting.js' %}
+
+    <h1>Organisation Member Report</h1>
+
+    <div class="reporting-form-center">
+      <form action="{{ h.url_for('organisation_member_report') }}" method="get" class="form-horizontal">
+
+        {{ form.select(
+          'organisation',
+          id='general_date_range_organisations',
+          label=_('Organisation'),
+          options=organisations,
+          selected=organisation
+        ) }}
+
+        {{ form.select(
+          'sub_organisation',
+          id='general_date_range_sub_organisations',
+          label=_('Sub Organisation'),
+          options=sub_organisations or [],
+          selected=sub_organisation if sub_organisation else '',
+          classes=['no-hide'] if organisations and sub_organisations and sub_organisations|length > 1 else []
+        ) }}
+
+        {{ form.select(
+          'state',
+          id='field-state',
+          label=_('State'),
+          options=h.get_user_states(),
+          selected=state or ''
+        ) }}
+
+        <div class="report-options">
+            <input type="radio" id="option-display-report" name="view" value="display" /> Display
+            <input type="radio" id="option-download-report" name="view" value="download" /> Download
+        </div>
+
+        <div class="form-actions">
+            <button id="display-report" class="btn btn-primary">
+                <i class="fa fa-table"></i>
+                Display
+            </button>
+            <button id="download-report" class="btn btn-secondary">
+                <i class="fa fa-file-text-o"></i>
+                Download
+            </button>
+        </div>
+      </form>
+    </div>
+
+    {% if members %}
+        <hr />
+        {% if organisation and report_title %}
+            {% if sub_organisation == 'all-sub-organisations' %}
+                {% set title = organisation.title %}
+            {% else %}
+                {% set title = sub_organisation.title %}
+            {% endif %}
+            <h4>
+                {{ report_title }}
+                {%- if sub_organisation == 'all-sub-organisations' %}
+                <small>(inc. all sub-organisations)</small>
+                {%- endif -%}
+            </h4>
+        {% endif %}
+
+        <h5>Total: {{ members|length }}</h5>
+
+        <small>
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <th>Organisation</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Capacity</th>
+                    <th>State</th>
+                    <th>Created</th>
+                </thead>
+                <tbody>
+                    {% for member in members %}
+                    <tr>
+                        <td>
+                            <a href="{{ h.url_for('organization_read', id=member.organisation_name) }}">
+                                {{ member.organisation_name }}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="/user/{{ member.username }}">
+                                {{ member.username }}
+                            </a>
+                        </td>
+                        <td><a href="mailto:{{ member.email }}">{{ member.email }}</a></td>
+                        <td>{{ member.capacity }}</td>
+                        <td>{{ h.display_member_state(member) }}</td>
+                        <td>{{ h.render_datetime(member.created, date_format='%d-%m-%Y', with_hours=True) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </small>
+    {% elif organisation %}
+        <p>No member data to report.</p>
+    {% endif %}
+
+{% endblock %}

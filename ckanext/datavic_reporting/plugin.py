@@ -62,6 +62,11 @@ class DataVicReportingPlugin(p.SingletonPlugin):
                     controller='ckanext.datavic_reporting.controller:ReportingController',
                     action='reports_sub_organisations')
 
+        # Organisation member report
+        map.connect('organisation_member_report', '/dashboard/member_report',
+                    controller='ckanext.datavic_reporting.member_report_controller:MemberReportController',
+                    action='report')
+
         # Scheduled reports
         map.connect('user_report_schedules', '/dashboard/report-schedules',
                     controller='ckanext.datavic_reporting.controller:ReportScheduleController',
@@ -96,7 +101,10 @@ class DataVicReportingPlugin(p.SingletonPlugin):
             'user_report_get_organisations': helpers.get_organisation_list,
             'get_report_schedules': helpers.get_report_schedules,
             'get_report_schedule_organisation_list': helpers.get_report_schedule_organisation_list,
-            'get_scheduled_report_frequencies_list': helpers.get_scheduled_report_frequencies_list
+            'get_scheduled_report_frequencies_list': helpers.get_scheduled_report_frequencies_list,
+            'display_member_state': helpers.display_member_state,
+            'get_organisation_node_tree': helpers.get_organisation_node_tree,
+            'get_user_states': helpers.get_user_states,
         }
 
     # IActions
@@ -110,6 +118,7 @@ class DataVicReportingPlugin(p.SingletonPlugin):
             "report_schedule_list": get.report_schedule_list,
             "report_jobs": get.report_jobs,
             "report_job_create": create.report_job_create,
+            "organisation_members": get.organisation_members,
         }
 
     # IValidators
