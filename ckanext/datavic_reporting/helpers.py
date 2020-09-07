@@ -1,4 +1,4 @@
-import authorisation
+import ckanext.datavic_reporting.authorisation as authorisation
 import calendar
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
@@ -14,8 +14,8 @@ import sqlalchemy
 from ckan.lib.navl.dictization_functions import unflatten
 from ckan.logic import clean_dict, tuplize_dict, parse_params
 from dateutil import parser
-from model import GroupTreeNode
-from pylons import response
+from ckanext.datavic_reporting.model import GroupTreeNode
+from flask import make_response
 
 _and_ = sqlalchemy.and_
 _session_ = model.Session
@@ -33,7 +33,7 @@ def get_context():
 
 
 def get_user():
-    return toolkit.c.userobj
+    return toolkit.g.userobj
 
 
 def get_username():
@@ -298,7 +298,7 @@ def generate_general_report(path, filename, start_date, end_date, organisation):
         if not os.path.isdir(path):
             log.error(e)
             raise
-    csv_writer = csv.writer(open(path + filename, 'wb'))
+    csv_writer = csv.writer(open(path + filename, 'w'))
 
     header = [
         'Title',
@@ -378,6 +378,7 @@ def download_file(filepath):
     fh = open(filepath)
     filename = os.path.basename(filepath)
     ctype = get_file_type(filename)
+    response = make_response()
     response.headers[b'Content-Type'] = b'{0}; charset=utf-8'.format(ctype)
     response.headers[b'Content-Disposition'] = b"attachment;filename={0}".format(filename)
     return fh.read()

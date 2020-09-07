@@ -31,7 +31,7 @@ def report_schedule_list(context, data_dict):
         else:
             scheduled_reports = model.Session.query(ReportSchedule).all()
         return [s.as_dict() for s in scheduled_reports]
-    except Exception, e:
+    except Exception as e:
         return {'error': str(e)}
 
 
@@ -48,7 +48,7 @@ def report_jobs(context, data_dict):
             toolkit.check_access('report_jobs', context, {})
             report_jobs = model.Session.query(ReportJob).filter_by(report_schedule_id=report_schedule_id).all()
             return [r.as_dict() for r in report_jobs]
-        except Exception, e:
+        except Exception as e:
             error = str(e)
 
     return {'error': error}

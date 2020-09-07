@@ -1,7 +1,7 @@
 import ckan.plugins.toolkit as toolkit
-from ckan.plugins.toolkit import Invalid
-import helpers
+import ckanext.datavic_reporting.helpers as helpers
 
+Invalid = toolkit.Invalid
 
 def report_type_validator(report_type):
     if report_type not in ['general']:

@@ -1,9 +1,11 @@
 import ckan.plugins as p
 import ckan.plugins.toolkit as toolkit
-import helpers
-import authorisation
 import logging
-import validators
+import ckanext.datavic_reporting.helpers as helpers
+import ckanext.datavic_reporting.authorisation as authorisation
+import ckanext.datavic_reporting.validators as validators
+
+from ckanext.datavic_reporting.cli import get_commands
 
 log = logging.getLogger(__name__)
 
@@ -15,6 +17,7 @@ class DataVicReportingPlugin(p.SingletonPlugin):
     p.implements(p.ITemplateHelpers)
     p.implements(p.IActions, inherit=True)
     p.implements(p.IValidators, inherit=True)
+    p.implements(p.IClick)
 
     # IConfigurer
     def update_config(self, config_):
@@ -27,7 +30,7 @@ class DataVicReportingPlugin(p.SingletonPlugin):
         schema.update({
             'ckan.datavic_reporting.scheduled_reporting_frequencies': [
                 toolkit.get_validator('ignore_missing'),
-                unicode
+                str
             ]
         })
 
@@ -133,4 +136,8 @@ class DataVicReportingPlugin(p.SingletonPlugin):
             "report_schedule_validator": validators.report_schedule_validator,
             "report_job_validator": validators.report_job_validator,
         }
+
+    # IClick
+    def get_commands(self):
+        return get_commands()
 

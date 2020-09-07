@@ -20,7 +20,8 @@ import ckan
 import ckan.common
 from ckan.common import config, _
 import paste.deploy.converters
-from ckan.lib.base import render_jinja2
+from ckan.lib.base import render
+
 
 
 log = logging.getLogger(__name__)
@@ -79,7 +80,7 @@ def _mail_recipient(recipient_name, recipient_email,
         smtp_password = None
     else:
         smtp_server = config.get('smtp.server', 'localhost')
-        smtp_starttls = paste.deploy.converters.asbool(
+        smtp_starttls = ckan.common.asbool(
             config.get('smtp.starttls'))
         smtp_user = config.get('smtp.user')
         smtp_password = config.get('smtp.password')
@@ -173,8 +174,8 @@ def mail_user(recipient, subject, body, body_html=None, headers={}, attachments=
 def send_scheduled_report_email(user_emails, email_type, extra_vars):
     if not user_emails or len(user_emails) == 0:
         return
-    subject = render_jinja2('emails/subjects/{0}.txt'.format(email_type), extra_vars)
-    body = render_jinja2('emails/bodies/{0}.txt'.format(email_type), extra_vars)
+    subject = render('emails/subjects/{0}.txt'.format(email_type), extra_vars)
+    body = render('emails/bodies/{0}.txt'.format(email_type), extra_vars)
     attachments =  [extra_vars.get('file_path')]
     log.debug('Attempting to send {0} to: {1}'.format(email_type, user_emails))
     for user_email in user_emails:

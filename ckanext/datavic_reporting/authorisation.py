@@ -1,6 +1,6 @@
 import ckan.plugins.toolkit as toolkit
 import ckan.authz as authz
-import helpers
+import ckanext.datavic_reporting.helpers as helpers
 import logging
 
 log = logging.getLogger(__name__)
