@@ -18,6 +18,11 @@ class DataVicReportingPlugin(p.SingletonPlugin):
     p.implements(p.IActions, inherit=True)
     p.implements(p.IValidators, inherit=True)
     p.implements(p.IClick)
+    p.implements(p.IBlueprint)
+
+    # IBlueprint
+    def get_blueprint(self):
+        return helpers._register_blueprints()
 
     # IConfigurer
     def update_config(self, config_):
@@ -51,19 +56,19 @@ class DataVicReportingPlugin(p.SingletonPlugin):
     # IRoutes
     def before_map(self, map):
         # Reporting mappings
-        map.connect('user_dashboard_reports', '/dashboard/reports',
-                    controller='ckanext.datavic_reporting.controller:ReportingController',
-                    action='reports',
-                    ckan_icon='file')
-        map.connect('user_reports_general_year_month', '/user/reports/general_year_month',
-                    controller='ckanext.datavic_reporting.controller:ReportingController',
-                    action='reports_general_year_month')
-        map.connect('user_reports_general_date_range', '/user/reports/general_date_range',
-                    controller='ckanext.datavic_reporting.controller:ReportingController',
-                    action='reports_general_date_range')
-        map.connect('user_reports_sub_organisations', '/user/reports/sub_organisations',
-                    controller='ckanext.datavic_reporting.controller:ReportingController',
-                    action='reports_sub_organisations')
+        # map.connect('user_dashboard_reports', '/dashboard/reports',
+        #             controller='ckanext.datavic_reporting.controller:ReportingController',
+        #             action='reports',
+        #             ckan_icon='file')
+        # map.connect('user_reports_general_year_month', '/user/reports/general_year_month',
+        #             controller='ckanext.datavic_reporting.controller:ReportingController',
+        #             action='reports_general_year_month')
+        # map.connect('user_reports_general_date_range', '/user/reports/general_date_range',
+        #             controller='ckanext.datavic_reporting.controller:ReportingController',
+        #             action='reports_general_date_range')
+        # map.connect('user_reports_sub_organisations', '/user/reports/sub_organisations',
+        #             controller='ckanext.datavic_reporting.controller:ReportingController',
+        #             action='reports_sub_organisations')
 
         # Organisation member report
         map.connect('organisation_member_report', '/dashboard/member_report',
@@ -71,10 +76,10 @@ class DataVicReportingPlugin(p.SingletonPlugin):
                     action='report')
 
         # Scheduled reports
-        map.connect('user_report_schedules', '/dashboard/report-schedules',
-                    controller='ckanext.datavic_reporting.controller:ReportScheduleController',
-                    action='schedules',
-                    ckan_icon='file')
+        # map.connect('user_report_schedules', '/dashboard/report-schedules',
+        #             controller='ckanext.datavic_reporting.controller:ReportScheduleController',
+        #             action='schedules',
+        #             ckan_icon='file')
         map.connect('user_report_schedule_create', '/dashboard/report-schedule/create',
                     controller='ckanext.datavic_reporting.controller:ReportScheduleController',
                     action='create')

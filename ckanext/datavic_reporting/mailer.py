@@ -19,7 +19,6 @@ import os
 import ckan
 import ckan.common
 from ckan.common import config, _
-import paste.deploy.converters
 from ckan.lib.base import render
 
 
