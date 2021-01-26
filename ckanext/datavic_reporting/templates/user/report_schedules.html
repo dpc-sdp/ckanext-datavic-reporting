@@ -7,7 +7,7 @@
 {% set months, current_month = h.user_report_get_months() %}
 {% set organisations = h.get_report_schedule_organisation_list() %}
 {% set frequencies = h.get_scheduled_report_frequencies_list() %}
-{% resource 'datavic_reporting/datavic_reporting.js' %}
+{% asset 'datavic_reporting/datavic_reporting.js' %}
 
 <div id="datavic_reporting">
   <form action="/dashboard/report-schedule/{% if c.action == 'update' and data and data['id'] %}update/{{ data['id'] }}{% else %}create{% endif %}" method="post" class="form-horizontal">
@@ -123,11 +123,11 @@
             {{ schedule.state[0]|upper }}{{ schedule.state[1:] }}
           </td>
           <td>
-            <a href="{{ h.url_for('user_report_schedule_update', id=schedule.id ) }}" class="btn btn-small btn-warning">Edit</a>
+            <a href="{{ h.url_for('scheduling.update', id=schedule.id ) }}" class="btn btn-small btn-warning">Edit</a>
             {% if schedule.state != 'deleted' %}
-              <a href="{{ h.url_for('user_report_schedule_delete', id=schedule.id ) }}" class="btn btn-small btn-danger">Delete</a>
+              <a href="{{ h.url_for('scheduling.delete', id=schedule.id ) }}" class="btn btn-small btn-danger">Delete</a>
             {% endif %}
-            <a href="{{ h.url_for('user_report_schedule_jobs', report_schedule_id=schedule.id ) }}" class="btn btn-small">Jobs</a>
+            <a href="{{ h.url_for('scheduling.jobs', report_schedule_id=schedule.id ) }}" class="btn btn-small">Jobs</a>
           </td>
         </tr>
       {% endfor %}

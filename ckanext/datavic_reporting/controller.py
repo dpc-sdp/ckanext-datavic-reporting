@@ -73,20 +73,20 @@ abort = base.abort
 #         return json.dumps(helpers.get_organisation_node_tree(organisation_id))
 
 
-class ReportScheduleController(base.BaseController):
-    @classmethod
-    def check_user_access(cls):
-        user_report_schedules = authorisation.user_report_schedules(helpers.get_context())
-        if not user_report_schedules or not user_report_schedules.get('success'):
-            abort(403, toolkit._('You are not Authorized'))
+# class ReportScheduleController(base.BaseController):
+#     @classmethod
+#     def check_user_access(cls):
+#         user_report_schedules = authorisation.user_report_schedules(helpers.get_context())
+#         if not user_report_schedules or not user_report_schedules.get('success'):
+#             abort(403, toolkit._('You are not Authorized'))
 
-    def schedules(self):
-        self.check_user_access()
+#     def schedules(self):
+#         self.check_user_access()
 
-        vars = {}
+#         vars = {}
 
-        return base.render('user/report_schedules.html',
-                           extra_vars=vars)
+#         return base.render('user/report_schedules.html',
+#                            extra_vars=vars)
 
     # def create(self):
     #     self.check_user_access()
@@ -142,23 +142,23 @@ class ReportScheduleController(base.BaseController):
     #         h.flash_error('Error deleting report schedule')
     #     h.redirect_to('/dashboard/report-schedules')
 
-    def jobs(self, report_schedule_id=None):
-        self.check_user_access()
+    # def jobs(self, report_schedule_id=None):
+    #     self.check_user_access()
 
-        vars = {}
+    #     vars = {}
 
-        schedule = ReportSchedule.get(report_schedule_id)
-        if schedule:
-            vars['schedule'] = schedule.as_dict()
-            vars['jobs'] = toolkit.get_action('report_jobs')(helpers.get_context(), {'report_schedule_id': report_schedule_id})
+    #     schedule = ReportSchedule.get(report_schedule_id)
+    #     if schedule:
+    #         vars['schedule'] = schedule.as_dict()
+    #         vars['jobs'] = toolkit.get_action('report_jobs')(helpers.get_context(), {'report_schedule_id': report_schedule_id})
 
-        return base.render('user/report_jobs.html', extra_vars=vars)
+    #     return base.render('user/report_jobs.html', extra_vars=vars)
 
-    def job_download(self, report_job_id=None):
-        self.check_user_access()
+    # def job_download(self, report_job_id=None):
+    #     self.check_user_access()
         
-        job = ReportJob.get(report_job_id)
-        if job:
-           return helpers.download_file(job.filename)
-        else:
-            h.flash_error('Error: Could not find job file to download')
+    #     job = ReportJob.get(report_job_id)
+    #     if job:
+    #        return helpers.download_file(job.filename)
+    #     else:
+    #         h.flash_error('Error: Could not find job file to download')

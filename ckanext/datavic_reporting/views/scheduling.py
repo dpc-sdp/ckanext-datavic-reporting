@@ -42,20 +42,39 @@ scheduling = Blueprint('scheduling', __name__)
 
 @scheduling.before_request
 def _check_user_access():
-        user_report_schedules = authorisation.user_report_schedules(helpers.get_context())
-        if not user_report_schedules or not user_report_schedules.get('success'):
-            abort(403, toolkit._('You are not Authorized'))
+    user_report_schedules = authorisation.user_report_schedules(helpers.get_context())
+    if not user_report_schedules or not user_report_schedules.get('success'):
+        abort(403, toolkit._('You are not Authorized'))
+
 
 def schedules():
-    _check_user_access()
-
     vars = {}
-
     return base.render('user/report_schedules.html',
                         extra_vars=vars)
 
+def jobs(report_schedule_id=None):
+    '''
+    Jobs endpoint
+    '''
+    vars = {}
+    schedule = ReportSchedule.get(report_schedule_id)
+    if schedule:
+        vars['schedule'] = schedule.as_dict()
+        vars['jobs'] = toolkit.get_action('report_jobs')(helpers.get_context(), {'report_schedule_id': report_schedule_id})
 
-#TODO: use _check_user_access as before request
+    return base.render('user/report_jobs.html', extra_vars=vars)
+
+def job_download(report_job_id=None):
+    '''
+    Jobs download
+    '''
+    job = ReportJob.get(report_job_id)
+    if job:
+        return helpers.download_file(job.filename)
+    else:
+        h.flash_error('Error: Could not find job file to download')
+
+
 class ReportSchedulingCreate(MethodView):
 
     def get(self):
@@ -110,11 +129,12 @@ class ReportSchedulingDelete(MethodView):
         h.redirect_to('/dashboard/report-schedules')
 
 
-#TODO: Add route rules
 def register_datavic_scheduling_plugin_rules(blueprint):
     blueprint.add_url_rule('/dashboard/report-schedules', view_func=schedules)
-    # blueprint.add_url_rule('/user/reports/general_year_month', view_func=reports_general_year_month)
-    # blueprint.add_url_rule('/user/reports/general_date_range', view_func=reports_general_date_range)
-    # blueprint.add_url_rule('/user/reports/sub_organisations', view_func=reports_sub_organisations)
+    blueprint.add_url_rule('/dashboard/report-schedule/create', view_func=ReportSchedulingCreate.as_view(str('create')))
+    blueprint.add_url_rule('/dashboard/report-schedule/update', view_func=ReportSchedulingUpdate.as_view(str('update')))
+    blueprint.add_url_rule('/dashboard/report-schedule/delete', view_func=ReportSchedulingDelete.as_view(str('delete')))
+    blueprint.add_url_rule('/dashboard/report-schedule/jobs/<report_schedule_id>', view_func=jobs)
+    blueprint.add_url_rule('/dashboard/report-schedule/jobs/<report_job_id>/download', view_func=job_download)
 
 register_datavic_scheduling_plugin_rules(scheduling)

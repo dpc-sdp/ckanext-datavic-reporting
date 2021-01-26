@@ -6,7 +6,7 @@
 {% set years, current_year = h.user_report_get_years() %}
 {% set months, current_month = h.user_report_get_months() %}
 {% set organisations = h.user_report_get_organisations() %}
-{% resource 'datavic_reporting/datavic_reporting.js' %}
+{% asset 'datavic_reporting/datavic_reporting.js' %}
 
 <div id="datavic_reporting">
   <form action="/user/reports/general_date_range" method="get" class="form-horizontal">
