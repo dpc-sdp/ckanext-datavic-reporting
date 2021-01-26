@@ -1,0 +1,4 @@
+datavic_reporting:
+  content:
+   - datavic_reporting.js
+  filters: rjsmin
