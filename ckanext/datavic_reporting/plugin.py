@@ -55,49 +55,9 @@ class DataVicReportingPlugin(p.SingletonPlugin):
 
     # IRoutes
     ## TODO: Remove after validating blueprint rutes work
-    def before_map(self, map):
-        # Reporting mappings
-        # map.connect('user_dashboard_reports', '/dashboard/reports',
-        #             controller='ckanext.datavic_reporting.controller:ReportingController',
-        #             action='reports',
-        #             ckan_icon='file')
-        # map.connect('user_reports_general_year_month', '/user/reports/general_year_month',
-        #             controller='ckanext.datavic_reporting.controller:ReportingController',
-        #             action='reports_general_year_month')
-        # map.connect('user_reports_general_date_range', '/user/reports/general_date_range',
-        #             controller='ckanext.datavic_reporting.controller:ReportingController',
-        #             action='reports_general_date_range')
-        # map.connect('user_reports_sub_organisations', '/user/reports/sub_organisations',
-        #             controller='ckanext.datavic_reporting.controller:ReportingController',
-        #             action='reports_sub_organisations')
-
-        # Organisation member report
-        # map.connect('organisation_member_report', '/dashboard/member_report',
-        #             controller='ckanext.datavic_reporting.member_report_controller:MemberReportController',
-        #             action='report')
-
-        # Scheduled reports
-        # map.connect('user_report_schedules', '/dashboard/report-schedules',
-        #             controller='ckanext.datavic_reporting.controller:ReportScheduleController',
-        #             action='schedules',
-        #             ckan_icon='file')
-        # map.connect('user_report_schedule_create', '/dashboard/report-schedule/create',
-        #             controller='ckanext.datavic_reporting.controller:ReportScheduleController',
-        #             action='create')
-        # map.connect('user_report_schedule_update', '/dashboard/report-schedule/update/{id}',
-        #             controller='ckanext.datavic_reporting.controller:ReportScheduleController',
-        #             action='update')
-        # map.connect('user_report_schedule_delete', '/dashboard/report-schedule/delete/{id}',
-        #             controller='ckanext.datavic_reporting.controller:ReportScheduleController',
-        #             action='delete')
-        # map.connect('user_report_schedule_jobs', '/dashboard/report-schedule/jobs/{report_schedule_id}',
-        #             controller='ckanext.datavic_reporting.controller:ReportScheduleController',
-        #             action='jobs')
-        # map.connect('user_report_schedule_job_download', '/dashboard/report-schedule/jobs/{report_job_id}/download',
-        #             controller='ckanext.datavic_reporting.controller:ReportScheduleController',
-        #             action='job_download')
-
-        return map
+    # def before_map(self, map):
+       
+    #     return map
 
     # ITemplateHelpers
     def get_helpers(self):
