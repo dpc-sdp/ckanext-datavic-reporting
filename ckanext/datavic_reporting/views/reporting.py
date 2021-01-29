@@ -7,8 +7,7 @@ from datetime import datetime
 
 
 import ckan.lib.helpers as h
-import ckan.logic as logic
-from ckan.common import _, g, request
+from ckan.common import _
 import ckan.plugins.toolkit as toolkit
 
 
@@ -53,30 +52,30 @@ def reports_general_year_month():
     _check_user_access()
 
     year, month = helpers.get_year_month(
-        toolkit.request.GET.get('report_date_year', None),
-        toolkit.request.GET.get('report_date_month', None)
+        toolkit.request.params.get('report_date_year', None),
+        toolkit.request.params.get('report_date_month', None)
     )
 
     start_date, end_date = helpers.get_report_date_range(year, month)
-    organisation = toolkit.request.GET.get('organisation', None)
-    sub_organisation = toolkit.request.GET.get('sub_organisation', 'all-sub-organisations')
+    organisation = toolkit.request.params.get('organisation', None)
+    sub_organisation = toolkit.request.params.get('sub_organisation', 'all-sub-organisations')
 
     return _general_report(start_date, end_date, organisation if sub_organisation == 'all-sub-organisations' else sub_organisation)
 
 def reports_general_date_range():
     _check_user_access()
 
-    start_date = toolkit.request.GET.get('report_date_from', None)
-    end_date = toolkit.request.GET.get('report_date_to', None)
-    organisation = toolkit.request.GET.get('organisation', None)
-    sub_organisation = toolkit.request.GET.get('sub_organisation', 'all-sub-organisations')
+    start_date = toolkit.request.params.get('report_date_from', None)
+    end_date = toolkit.request.params.get('report_date_to', None)
+    organisation = toolkit.request.params.get('organisation', None)
+    sub_organisation = toolkit.request.params.get('sub_organisation', 'all-sub-organisations')
 
     return _general_report(start_date, end_date, organisation if sub_organisation == 'all-sub-organisations' else sub_organisation)
 
 def reports_sub_organisations():
     _check_user_access()
 
-    organisation_id = toolkit.request.GET.get('organisation_id', None)
+    organisation_id = toolkit.request.params.get('organisation_id', None)
 
     return json.dumps(helpers.get_organisation_node_tree(organisation_id))
 

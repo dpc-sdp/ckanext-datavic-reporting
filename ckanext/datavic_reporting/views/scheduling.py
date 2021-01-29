@@ -9,7 +9,7 @@ from datetime import datetime
 
 import ckan.lib.helpers as h
 import ckan.model as model
-from ckan.common import _, g, request
+from ckan.common import _, request
 import ckan.plugins.toolkit as toolkit
 
 

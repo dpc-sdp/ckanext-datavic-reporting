@@ -265,9 +265,9 @@ def write_csv_row(csv_writer, dataset_list):
             row.append(value(dataset_dict, 'notes'))
             row.append(value(dataset_dict['organization'], 'title')
                        if 'organization' in dataset_dict and dataset_dict['organization'] != None else '')
-            row.append(', '.join([value(group, 'title')
+            row.append(b', '.join([value(group, 'title')
                                   for group in dataset_dict['groups']])
-                       if 'groups' in dataset_dict and dataset_dict['groups'] != None else '')
+                       if 'groups' in dataset_dict and dataset_dict['groups'] != None else b'')
             row.append(value(dataset_dict, 'agency_program'))
             row.append('No' if dataset_dict.get('private', False) else 'Yes')
             row.append(value(dataset_dict, 'workflow_status'))
@@ -381,8 +381,8 @@ def download_file(filepath):
     filename = os.path.basename(filepath)
     ctype = get_file_type(filename)
     response = make_response()
-    response.headers[b'Content-Type'] = b'{0}; charset=utf-8'.format(ctype)
-    response.headers[b'Content-Disposition'] = b"attachment;filename={0}".format(filename)
+    response.headers['Content-Type'] = '{0}; charset=utf-8'.format(ctype)
+    response.headers['Content-Disposition'] = "attachment;filename={0}".format(filename)
     return fh.read()
 
 
