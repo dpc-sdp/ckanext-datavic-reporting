@@ -1,4 +1,3 @@
-import pdb
 import ckanext.datavic_reporting.authorisation as authorisation
 import calendar
 import ckan.model as model

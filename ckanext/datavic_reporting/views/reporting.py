@@ -6,10 +6,8 @@ from flask import Blueprint
 from datetime import datetime
 
 
-import ckan.lib.base as base
 import ckan.lib.helpers as h
 import ckan.logic as logic
-import ckan.model as model
 from ckan.common import _, g, request
 import ckan.plugins.toolkit as toolkit
 
@@ -18,20 +16,11 @@ import ckanext.datavic_reporting.helpers as helpers
 import ckanext.datavic_reporting.authorisation as authorisation
 import ckanext.datavic_reporting.validators as validators
 
-NotFound = logic.NotFound
-NotAuthorized = logic.NotAuthorized
-ValidationError = logic.ValidationError
-#TemplateNotFound = logic.TemplateNotFound
-check_access = logic.check_access
-get_action = logic.get_action
-tuplize_dict = logic.tuplize_dict
-clean_dict = logic.clean_dict
-parse_params = logic.parse_params
-flatten_to_string_key = logic.flatten_to_string_key
+get_action = toolkit.get_action
 
 
-render = base.render
-abort = base.abort
+render = toolkit.render
+abort = toolkit.abort
 
 log = logging.getLogger(__name__)
 
