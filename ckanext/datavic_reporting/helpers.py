@@ -17,7 +17,8 @@ from ckan.lib.navl.dictization_functions import unflatten
 from ckan.logic import clean_dict, tuplize_dict, parse_params
 from dateutil import parser
 from ckanext.datavic_reporting.model import GroupTreeNode
-from flask import make_response, Blueprint
+from flask import send_from_directory, Blueprint
+from ckan.views.user import _extra_template_variables
 
 _and_ = sqlalchemy.and_
 _session_ = model.Session
@@ -230,10 +231,10 @@ def get_dataset_data(start_date, end_date, start_offset, organisation_names):
         query.append('(metadata_created:[* TO {0}T23:59:59.999Z] OR metadata_modified:[* TO {0}T23:59:59.999Z])'.format(end_date))
     elif start_date:
         query.append('(metadata_created:[{0}T00:00:00.000Z TO *] OR metadata_modified:[{0}T00:00:00.000Z TO *])'.format(start_date))
-    
+
     if organisation_names:
         query.append('(organization:{0})'.format(' OR organization:'.join(map(str, organisation_names))))
-    
+
     data_dict = {
         'q': ' AND '.join(query),
         'sort': 'metadata_created asc, metadata_modified asc',
@@ -266,7 +267,7 @@ def write_csv_row(csv_writer, dataset_list):
             row.append(value(dataset_dict['organization'], 'title')
                        if 'organization' in dataset_dict and dataset_dict['organization'] != None else '')
             row.append(b', '.join([value(group, 'title')
-                                  for group in dataset_dict['groups']])
+                                   for group in dataset_dict['groups']])
                        if 'groups' in dataset_dict and dataset_dict['groups'] != None else b'')
             row.append(value(dataset_dict, 'agency_program'))
             row.append('No' if dataset_dict.get('private', False) else 'Yes')
@@ -365,33 +366,27 @@ def get_organisation_role_emails(context, id, role):
         "include_groups": False,
         "include_tags": False,
         "include_followers": False
-    }   
-    organisation = toolkit.get_action('organization_show')(context, data_dict=data_dict)   
+    }
+    organisation = toolkit.get_action('organization_show')(context, data_dict=data_dict)
     for org_user in organisation.get('users'):
-        if(org_user.get('capacity') == role):           
-            user = toolkit.get_action('user_show')(context, data_dict={"id":org_user.get('id')})
+        if(org_user.get('capacity') == role):
+            user = toolkit.get_action('user_show')(context, data_dict={"id": org_user.get('id')})
             user_email = user.get('email')
             if user_email:
                 user_emails.append(user_email)
     return user_emails if user_emails else None
 
 
-def download_file(filepath):
-    fh = open(filepath)
-    filename = os.path.basename(filepath)
-    ctype = get_file_type(filename)
-    response = make_response()
-    response.headers['Content-Type'] = '{0}; charset=utf-8'.format(ctype)
-    response.headers['Content-Disposition'] = "attachment;filename={0}".format(filename)
-    return fh.read()
+def download_file(directory, filename):
+    return send_from_directory(directory, filename)
 
 
 def get_file_type(filename):
     ctype, encoding = mimetypes.guess_type(filename)
     if ctype is None or encoding is not None:
         ctype = "application/octet-stream"
-    
-    return ctype  
+
+    return ctype
 
 
 def get_scheduled_report_frequencies():
@@ -422,7 +417,7 @@ def generate_member_report(path, filename, data_dict):
         if not os.path.isdir(path):
             log.error(e)
             raise
-    csv_writer = csv.writer(open(path + filename, 'wb'))
+    csv_writer = csv.writer(open(path + filename, 'w'))
 
     header_row = [
         'Organisation',
@@ -461,6 +456,7 @@ def get_user_states():
         {'text': 'Pending (Review required)', 'value': 'pending_request'}
     ]
 
+
 def _register_blueprints():
     u'''Return all blueprints defined in the `views` folder
     '''
@@ -477,3 +473,10 @@ def _register_blueprints():
             blueprints.append(blueprint[1])
             log.info(u'Registered blueprint: {0!r}'.format(blueprint[0]))
     return blueprints
+
+
+def setup_extra_template_variables():
+    user = get_user()
+    context = {u'for_view': True, u'user': get_username(), u'auth_user_obj': user}
+    data_dict = {u'user_obj': user, u'include_datasets': True}
+    return _extra_template_variables(context, data_dict)

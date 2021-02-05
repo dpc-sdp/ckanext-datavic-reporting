@@ -26,6 +26,7 @@ log = logging.getLogger(__name__)
 
 member_report = Blueprint('member_report', __name__)
 
+
 @member_report.before_request
 def check_user_access():
     user_dashboard_reports = authorisation.user_dashboard_reports(helpers.get_context())
@@ -35,25 +36,27 @@ def check_user_access():
 
 def download_report(data_dict):
     # Generate a CSV report
-    path = '/tmp/'
+    directory = '/tmp/'
     filename = 'member_report_{0}.csv'.format(datetime.now().isoformat())
-    file_path = path + filename
 
-    helpers.generate_member_report(path, filename, data_dict)
+    helpers.generate_member_report(directory, filename, data_dict)
 
-    return helpers.download_file(file_path)
+    return helpers.download_file(directory, filename)
+
 
 def extract_request_params():
-    organisation = toolkit.request.GET.get('organisation', None)
-    sub_organisation = toolkit.request.GET.get('sub_organisation', 'all-sub-organisations')
+    organisation = toolkit.request.args.get('organisation', None)
+    sub_organisation = toolkit.request.args.get('sub_organisation', 'all-sub-organisations')
 
     data_dict = {
         'organisation': organisation,
         'organisations': None,
         'report_title': toolkit._('All organisations'),
-        'state': toolkit.request.GET.get('state', None),
+        'state': toolkit.request.args.get('state', None),
         'sub_organisation': sub_organisation,
     }
+    extra_vars = helpers.setup_extra_template_variables()
+    data_dict.update(extra_vars)
 
     if organisation:
         if sub_organisation == 'all-sub-organisations':
@@ -70,10 +73,11 @@ def extract_request_params():
 
     return data_dict
 
+
 def report():
     data_dict = extract_request_params()
 
-    view = toolkit.request.GET.get('view', 'display')
+    view = toolkit.request.args.get('view', 'display')
 
     if view == 'download':
         # return self.download_report(organisations)
@@ -84,7 +88,9 @@ def report():
 
     return render('member/report.html', extra_vars=data_dict)
 
+
 def register_member_report_plugin_rules(blueprint):
     blueprint.add_url_rule('/dashboard/member_report', view_func=report)
+
 
 register_member_report_plugin_rules(member_report)

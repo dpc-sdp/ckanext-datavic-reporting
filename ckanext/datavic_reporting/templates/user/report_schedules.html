@@ -13,8 +13,6 @@
   <form action="/dashboard/report-schedule/{% if c.action == 'update' and data and data['id'] %}update/{{ data['id'] }}{% else %}create{% endif %}" method="post" class="form-horizontal">
     <h3>{% if c.action == 'update'%}Update{% else %}Create{% endif %} report schedule</h3>
 
-    {{ errors }}
-
     {% if c.action != 'update' %}
     {{ form.select(
       name='report_type',
@@ -127,7 +125,7 @@
             {% if schedule.state != 'deleted' %}
               <a href="{{ h.url_for('scheduling.delete', id=schedule.id ) }}" class="btn btn-small btn-danger">Delete</a>
             {% endif %}
-            <a href="{{ h.url_for('scheduling.jobs', report_schedule_id=schedule.id ) }}" class="btn btn-small">Jobs</a>
+            <a href="{{ h.url_for('scheduling.jobs', id=schedule.id ) }}" class="btn btn-small">Jobs</a>
           </td>
         </tr>
       {% endfor %}
