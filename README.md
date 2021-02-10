@@ -13,9 +13,7 @@ Use the following paster command to initialise the tables:
 
     . /app/ckan/default/bin/activate
 
-    cd /app/src/ckanext-datavic-reporting
-
-    paster initdb --config=/app/ckan/default/production.ini
+    ckan datavic_reporting initdb --config=/app/ckan/default/production.ini
 
 * Replacing `production.ini` with the respective CKAN .ini file to be used.
 
@@ -38,9 +36,7 @@ To run the paster command (Replace {frequency} with 'monthly' or 'yearly'):
 
     . /app/ckan/default/bin/activate
 
-    cd /app/src/ckanext-datavic-reporting
-
-    paster createjob {frequency} --config=/app/ckan/default/production.ini
+    ckan datavic_reporting createjob {frequency} --config=/app/ckan/default/production.ini
 
 ## API Endpoints
 

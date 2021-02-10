@@ -30,7 +30,7 @@ def get_context():
     return {
         'model': model,
         'session': model.Session,
-        'user': toolkit.c.user,
+        'user': toolkit.g.user,
         'auth_user_obj': get_user()
     }
 
@@ -343,7 +343,8 @@ def clean_params(params):
 
 
 def get_report_schedules(state=None):
-    return toolkit.get_action('report_schedule_list')({}, {'state': state})
+    result = toolkit.get_action('report_schedule_list')({}, {'state': state})
+    return result.get('result') if result.get('success', False) == True else []
 
 
 def get_report_schedule_organisation_list():

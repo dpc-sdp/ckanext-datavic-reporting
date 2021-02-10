@@ -99,7 +99,7 @@ def report_job_create(context, data_dict):
                 report_job.status = constants.Statuses.NoEmails
 
             model.Session.commit()
-            return True
+            return {'success': True}
         else:
             errors = validated_data_dict
     except Exception as e:
@@ -108,4 +108,4 @@ def report_job_create(context, data_dict):
         log.error(e)
         errors['exception'] = str(e)
 
-    return {'errors': errors}
+    return {'success': False, 'error': errors}

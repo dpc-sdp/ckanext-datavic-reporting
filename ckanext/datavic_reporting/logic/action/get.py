@@ -30,9 +30,9 @@ def report_schedule_list(context, data_dict):
             scheduled_reports = model.Session.query(ReportSchedule).filter_by(state=state).all()
         else:
             scheduled_reports = model.Session.query(ReportSchedule).all()
-        return [s.as_dict() for s in scheduled_reports]
+        return {'success': True, 'result': [s.as_dict() for s in scheduled_reports]}
     except Exception as e:
-        return {'error': str(e)}
+        return {'success': False, 'error': str(e)}
 
 
 @side_effect_free
