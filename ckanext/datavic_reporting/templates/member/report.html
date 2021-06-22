@@ -6,7 +6,7 @@
     {% set organisations = h.user_report_get_organisations() %}
     {% set sub_organisations = h.get_organisation_node_tree(organisation) if organisation else None %}
 
-    {% asset 'datavic_reporting/datavic_reporting.js' %}
+    {% asset 'datavic_reporting/reporting' %}
 
     <h1>Organisation Member Report</h1>
 
