@@ -1,4 +1,6 @@
-datavic_reporting:
-  content:
-   - datavic_reporting.js
-  filters: rjsmin
+reporting:
+  extra:
+    preload:
+      - vendor/jquery
+  contents:
+    - datavic_reporting.js
