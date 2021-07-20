@@ -203,7 +203,7 @@ def buildOrganisationTree(user_organisations, organisation_tree, organisation, a
 
 def value(dataset_dict, field):
     value = dataset_dict.get(field, '')
-    return value.encode('ascii', 'ignore') if value else ''
+    return value.encode('ascii', 'ignore').decode('ascii') if value else ''
 
 
 def format_date(date_value):
@@ -266,9 +266,9 @@ def write_csv_row(csv_writer, dataset_list):
             row.append(value(dataset_dict, 'notes'))
             row.append(value(dataset_dict['organization'], 'title')
                        if 'organization' in dataset_dict and dataset_dict['organization'] != None else '')
-            row.append(b', '.join([value(group, 'title')
+            row.append(', '.join([value(group, 'title')
                                    for group in dataset_dict['groups']])
-                       if 'groups' in dataset_dict and dataset_dict['groups'] != None else b'')
+                       if 'groups' in dataset_dict and dataset_dict['groups'] != None else '')
             row.append(value(dataset_dict, 'agency_program'))
             row.append('No' if dataset_dict.get('private', False) else 'Yes')
             row.append(value(dataset_dict, 'workflow_status'))
@@ -438,11 +438,11 @@ def generate_member_report(path, filename, data_dict):
 
     for member in members:
         row = [
-            member.organisation_name.encode('ascii', 'ignore'),
-            member.username.encode('ascii', 'ignore'),
-            member.email.encode('ascii', 'ignore'),
-            member.capacity.encode('ascii', 'ignore'),
-            display_member_state(member).encode('ascii', 'ignore'),
+            member.organisation_name.encode('ascii', 'ignore').decode('ascii'),
+            member.username.encode('ascii', 'ignore').decode('ascii'),
+            member.email.encode('ascii', 'ignore').decode('ascii'),
+            member.capacity.encode('ascii', 'ignore').decode('ascii'),
+            display_member_state(member).encode('ascii', 'ignore').decode('ascii'),
             tz.localize(member.created).astimezone(pytz.timezone(ckan_timezone))
         ]
 
