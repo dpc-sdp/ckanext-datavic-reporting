@@ -379,7 +379,7 @@ def get_organisation_role_emails(context, id, role):
 
 
 def download_file(directory, filename):
-    return send_from_directory(directory, filename, mimetype='text/csv')
+    return send_from_directory(directory, filename, mimetype='text/csv', as_attachment=True, attachment_filename=filename)
 
 
 def get_file_type(filename):
