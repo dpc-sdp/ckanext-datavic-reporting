@@ -1,9 +1,11 @@
 import ckan.plugins as p
 import ckan.plugins.toolkit as toolkit
-import helpers
-import authorisation
 import logging
-import validators
+import ckanext.datavic_reporting.helpers as helpers
+import ckanext.datavic_reporting.authorisation as authorisation
+import ckanext.datavic_reporting.validators as validators
+
+from ckanext.datavic_reporting.cli import get_commands
 
 log = logging.getLogger(__name__)
 
@@ -15,6 +17,12 @@ class DataVicReportingPlugin(p.SingletonPlugin):
     p.implements(p.ITemplateHelpers)
     p.implements(p.IActions, inherit=True)
     p.implements(p.IValidators, inherit=True)
+    p.implements(p.IClick)
+    p.implements(p.IBlueprint)
+
+    # IBlueprint
+    def get_blueprint(self):
+        return helpers._register_blueprints()
 
     # IConfigurer
     def update_config(self, config_):
@@ -27,7 +35,7 @@ class DataVicReportingPlugin(p.SingletonPlugin):
         schema.update({
             'ckan.datavic_reporting.scheduled_reporting_frequencies': [
                 toolkit.get_validator('ignore_missing'),
-                unicode
+                str
             ]
         })
 
@@ -46,49 +54,10 @@ class DataVicReportingPlugin(p.SingletonPlugin):
         }
 
     # IRoutes
-    def before_map(self, map):
-        # Reporting mappings
-        map.connect('user_dashboard_reports', '/dashboard/reports',
-                    controller='ckanext.datavic_reporting.controller:ReportingController',
-                    action='reports',
-                    ckan_icon='file')
-        map.connect('user_reports_general_year_month', '/user/reports/general_year_month',
-                    controller='ckanext.datavic_reporting.controller:ReportingController',
-                    action='reports_general_year_month')
-        map.connect('user_reports_general_date_range', '/user/reports/general_date_range',
-                    controller='ckanext.datavic_reporting.controller:ReportingController',
-                    action='reports_general_date_range')
-        map.connect('user_reports_sub_organisations', '/user/reports/sub_organisations',
-                    controller='ckanext.datavic_reporting.controller:ReportingController',
-                    action='reports_sub_organisations')
-
-        # Organisation member report
-        map.connect('organisation_member_report', '/dashboard/member_report',
-                    controller='ckanext.datavic_reporting.member_report_controller:MemberReportController',
-                    action='report')
-
-        # Scheduled reports
-        map.connect('user_report_schedules', '/dashboard/report-schedules',
-                    controller='ckanext.datavic_reporting.controller:ReportScheduleController',
-                    action='schedules',
-                    ckan_icon='file')
-        map.connect('user_report_schedule_create', '/dashboard/report-schedule/create',
-                    controller='ckanext.datavic_reporting.controller:ReportScheduleController',
-                    action='create')
-        map.connect('user_report_schedule_update', '/dashboard/report-schedule/update/{id}',
-                    controller='ckanext.datavic_reporting.controller:ReportScheduleController',
-                    action='update')
-        map.connect('user_report_schedule_delete', '/dashboard/report-schedule/delete/{id}',
-                    controller='ckanext.datavic_reporting.controller:ReportScheduleController',
-                    action='delete')
-        map.connect('user_report_schedule_jobs', '/dashboard/report-schedule/jobs/{report_schedule_id}',
-                    controller='ckanext.datavic_reporting.controller:ReportScheduleController',
-                    action='jobs')
-        map.connect('user_report_schedule_job_download', '/dashboard/report-schedule/jobs/{report_job_id}/download',
-                    controller='ckanext.datavic_reporting.controller:ReportScheduleController',
-                    action='job_download')
-
-        return map
+    ## TODO: Remove after validating blueprint rutes work
+    # def before_map(self, map):
+       
+    #     return map
 
     # ITemplateHelpers
     def get_helpers(self):
@@ -133,4 +102,8 @@ class DataVicReportingPlugin(p.SingletonPlugin):
             "report_schedule_validator": validators.report_schedule_validator,
             "report_job_validator": validators.report_job_validator,
         }
+
+    # IClick
+    def get_commands(self):
+        return get_commands()
 

@@ -6,10 +6,10 @@
 {% set years, current_year = h.user_report_get_years() %}
 {% set months, current_month = h.user_report_get_months() %}
 {% set organisations = h.user_report_get_organisations() %}
-{% resource 'datavic_reporting/datavic_reporting.js' %}
+{% asset 'datavic_reporting/reporting' %}
 
 <div id="datavic_reporting">
-  <form action="/user/reports/general_date_range" method="get" class="form-horizontal">
+  <form action="/user/reports/general_date_range" method="get" class="report form-horizontal">
     <h3>General Report Date Range</h3>
 
     {{ form.input('report_date_from', label=_('Date From'), type='date') }}
@@ -24,7 +24,7 @@
 
   </form>
 
-  <form id="general_year_month" action="/user/reports/general_year_month" method="get" class="form-horizontal">
+  <form id="general_year_month" action="/user/reports/general_year_month" method="get" class="report form-horizontal">
     <h3>General Report Month of the Year</h3>
 
     {{ form.select('report_date_year', label=_('Year'), options=years, selected=current_year) }}

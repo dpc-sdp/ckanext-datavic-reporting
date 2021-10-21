@@ -28,7 +28,7 @@ def report_schedule_delete(context, data_dict):
                     model.Session.delete(schedule)
                 model.Session.commit()
                 return True
-        except Exception, e:
+        except Exception as e:
             error = str(e)
 
     return {'errors': error}

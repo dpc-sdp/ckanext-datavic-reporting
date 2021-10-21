@@ -32,7 +32,7 @@ def report_schedule_update(context, data_dict):
                     return True
                 else:
                     errors = validated_data_dict
-        except Exception, e:
+        except Exception as e:
             errors['exception'] = str(e)
     else:
         errors = 'Invalid or no report schedule ID provided.'

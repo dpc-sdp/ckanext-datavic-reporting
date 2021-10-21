@@ -1,0 +1,6 @@
+reporting:
+  extra:
+    preload:
+      - vendor/jquery
+  contents:
+    - datavic_reporting.js

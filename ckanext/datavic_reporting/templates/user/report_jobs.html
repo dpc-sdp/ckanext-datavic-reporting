@@ -49,7 +49,7 @@
               </td>
               <td>{{ job['status'] }}</td>
               <td>
-                <a href="/dashboard/report-schedule/jobs/{{ job['id'] }}/download" class="btn btn-small">Download</a>
+                <a href="{{ h.url_for('scheduling.job_download', id=job.id ) }}" class="btn btn-small">Download</a>
               </td>
             </tr>
           {% endfor %}

@@ -6,12 +6,12 @@
     {% set organisations = h.user_report_get_organisations() %}
     {% set sub_organisations = h.get_organisation_node_tree(organisation) if organisation else None %}
 
-    {% resource 'datavic_reporting/datavic_reporting.js' %}
+    {% asset 'datavic_reporting/reporting' %}
 
     <h1>Organisation Member Report</h1>
 
     <div class="reporting-form-center">
-      <form action="{{ h.url_for('organisation_member_report') }}" method="get" class="form-horizontal">
+      <form action="{{ h.url_for('member_report.report') }}" method="get" class="form-horizontal">
 
         {{ form.select(
           'organisation',

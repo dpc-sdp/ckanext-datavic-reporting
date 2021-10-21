@@ -1,4 +1,4 @@
-import authorisation
+import ckanext.datavic_reporting.authorisation as authorisation
 import calendar
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
@@ -10,12 +10,15 @@ import mimetypes
 import os
 import pytz
 import sqlalchemy
+import pkgutil
+import inspect
 
 from ckan.lib.navl.dictization_functions import unflatten
 from ckan.logic import clean_dict, tuplize_dict, parse_params
 from dateutil import parser
-from model import GroupTreeNode
-from pylons import response
+from ckanext.datavic_reporting.model import GroupTreeNode
+from flask import send_from_directory, Blueprint
+from ckan.views.user import _extra_template_variables
 
 _and_ = sqlalchemy.and_
 _session_ = model.Session
@@ -27,13 +30,13 @@ def get_context():
     return {
         'model': model,
         'session': model.Session,
-        'user': toolkit.c.user,
+        'user': toolkit.g.user,
         'auth_user_obj': get_user()
     }
 
 
 def get_user():
-    return toolkit.c.userobj
+    return toolkit.g.userobj
 
 
 def get_username():
@@ -200,7 +203,7 @@ def buildOrganisationTree(user_organisations, organisation_tree, organisation, a
 
 def value(dataset_dict, field):
     value = dataset_dict.get(field, '')
-    return value.encode('ascii', 'ignore') if value else ''
+    return value.encode('ascii', 'ignore').decode('ascii') if value else ''
 
 
 def format_date(date_value):
@@ -228,10 +231,10 @@ def get_dataset_data(start_date, end_date, start_offset, organisation_names):
         query.append('(metadata_created:[* TO {0}T23:59:59.999Z] OR metadata_modified:[* TO {0}T23:59:59.999Z])'.format(end_date))
     elif start_date:
         query.append('(metadata_created:[{0}T00:00:00.000Z TO *] OR metadata_modified:[{0}T00:00:00.000Z TO *])'.format(start_date))
-    
+
     if organisation_names:
         query.append('(organization:{0})'.format(' OR organization:'.join(map(str, organisation_names))))
-    
+
     data_dict = {
         'q': ' AND '.join(query),
         'sort': 'metadata_created asc, metadata_modified asc',
@@ -264,7 +267,7 @@ def write_csv_row(csv_writer, dataset_list):
             row.append(value(dataset_dict['organization'], 'title')
                        if 'organization' in dataset_dict and dataset_dict['organization'] != None else '')
             row.append(', '.join([value(group, 'title')
-                                  for group in dataset_dict['groups']])
+                                   for group in dataset_dict['groups']])
                        if 'groups' in dataset_dict and dataset_dict['groups'] != None else '')
             row.append(value(dataset_dict, 'agency_program'))
             row.append('No' if dataset_dict.get('private', False) else 'Yes')
@@ -298,7 +301,7 @@ def generate_general_report(path, filename, start_date, end_date, organisation):
         if not os.path.isdir(path):
             log.error(e)
             raise
-    csv_writer = csv.writer(open(path + filename, 'wb'))
+    csv_writer = csv.writer(open(path + filename, 'w'))
 
     header = [
         'Title',
@@ -340,7 +343,8 @@ def clean_params(params):
 
 
 def get_report_schedules(state=None):
-    return toolkit.get_action('report_schedule_list')({}, {'state': state})
+    result = toolkit.get_action('report_schedule_list')({}, {'state': state})
+    return result.get('result') if result.get('success', False) == True else []
 
 
 def get_report_schedule_organisation_list():
@@ -363,32 +367,27 @@ def get_organisation_role_emails(context, id, role):
         "include_groups": False,
         "include_tags": False,
         "include_followers": False
-    }   
-    organisation = toolkit.get_action('organization_show')(context, data_dict=data_dict)   
+    }
+    organisation = toolkit.get_action('organization_show')(context, data_dict=data_dict)
     for org_user in organisation.get('users'):
-        if(org_user.get('capacity') == role):           
-            user = toolkit.get_action('user_show')(context, data_dict={"id":org_user.get('id')})
+        if(org_user.get('capacity') == role):
+            user = toolkit.get_action('user_show')(context, data_dict={"id": org_user.get('id')})
             user_email = user.get('email')
             if user_email:
                 user_emails.append(user_email)
     return user_emails if user_emails else None
 
 
-def download_file(filepath):
-    fh = open(filepath)
-    filename = os.path.basename(filepath)
-    ctype = get_file_type(filename)
-    response.headers[b'Content-Type'] = b'{0}; charset=utf-8'.format(ctype)
-    response.headers[b'Content-Disposition'] = b"attachment;filename={0}".format(filename)
-    return fh.read()
+def download_file(directory, filename):
+    return send_from_directory(directory, filename, mimetype='text/csv', as_attachment=True, attachment_filename=filename)
 
 
 def get_file_type(filename):
     ctype, encoding = mimetypes.guess_type(filename)
     if ctype is None or encoding is not None:
         ctype = "application/octet-stream"
-    
-    return ctype  
+
+    return ctype
 
 
 def get_scheduled_report_frequencies():
@@ -419,7 +418,7 @@ def generate_member_report(path, filename, data_dict):
         if not os.path.isdir(path):
             log.error(e)
             raise
-    csv_writer = csv.writer(open(path + filename, 'wb'))
+    csv_writer = csv.writer(open(path + filename, 'w'))
 
     header_row = [
         'Organisation',
@@ -439,11 +438,11 @@ def generate_member_report(path, filename, data_dict):
 
     for member in members:
         row = [
-            member.organisation_name.encode('ascii', 'ignore'),
-            member.username.encode('ascii', 'ignore'),
-            member.email.encode('ascii', 'ignore'),
-            member.capacity.encode('ascii', 'ignore'),
-            display_member_state(member).encode('ascii', 'ignore'),
+            member.organisation_name.encode('ascii', 'ignore').decode('ascii'),
+            member.username.encode('ascii', 'ignore').decode('ascii'),
+            member.email.encode('ascii', 'ignore').decode('ascii'),
+            member.capacity.encode('ascii', 'ignore').decode('ascii'),
+            display_member_state(member).encode('ascii', 'ignore').decode('ascii'),
             tz.localize(member.created).astimezone(pytz.timezone(ckan_timezone))
         ]
 
@@ -457,3 +456,28 @@ def get_user_states():
         {'text': 'Pending (Invite not active)', 'value': 'pending_invited'},
         {'text': 'Pending (Review required)', 'value': 'pending_request'}
     ]
+
+
+def _register_blueprints():
+    u'''Return all blueprints defined in the `views` folder
+    '''
+    blueprints = []
+
+    def is_blueprint(mm):
+        return isinstance(mm, Blueprint)
+
+    path = os.path.join(os.path.dirname(__file__), 'views')
+
+    for loader, name, _ in pkgutil.iter_modules([path]):
+        module = loader.find_module(name).load_module(name)
+        for blueprint in inspect.getmembers(module, is_blueprint):
+            blueprints.append(blueprint[1])
+            log.info(u'Registered blueprint: {0!r}'.format(blueprint[0]))
+    return blueprints
+
+
+def setup_extra_template_variables():
+    user = get_user()
+    context = {u'for_view': True, u'user': get_username(), u'auth_user_obj': user}
+    data_dict = {u'user_obj': user, u'include_datasets': True}
+    return _extra_template_variables(context, data_dict)

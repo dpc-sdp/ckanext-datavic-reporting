@@ -37,7 +37,7 @@ def report_schedule_create(context, data_dict):
             return True
         else:
             errors = validated_data_dict
-    except Exception, e:
+    except Exception as e:
         errors['exception'] = str(e)
 
     return {'errors': errors}
@@ -99,13 +99,13 @@ def report_job_create(context, data_dict):
                 report_job.status = constants.Statuses.NoEmails
 
             model.Session.commit()
-            return True
+            return {'success': True}
         else:
             errors = validated_data_dict
-    except Exception, e:
+    except Exception as e:
         report_job.status = constants.Statuses.Failed
         model.Session.commit()
         log.error(e)
         errors['exception'] = str(e)
 
-    return {'errors': errors}
+    return {'success': False, 'error': errors}

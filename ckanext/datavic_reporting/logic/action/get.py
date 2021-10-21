@@ -30,9 +30,9 @@ def report_schedule_list(context, data_dict):
             scheduled_reports = model.Session.query(ReportSchedule).filter_by(state=state).all()
         else:
             scheduled_reports = model.Session.query(ReportSchedule).all()
-        return [s.as_dict() for s in scheduled_reports]
-    except Exception, e:
-        return {'error': str(e)}
+        return {'success': True, 'result': [s.as_dict() for s in scheduled_reports]}
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
 
 
 @side_effect_free
@@ -48,7 +48,7 @@ def report_jobs(context, data_dict):
             toolkit.check_access('report_jobs', context, {})
             report_jobs = model.Session.query(ReportJob).filter_by(report_schedule_id=report_schedule_id).all()
             return [r.as_dict() for r in report_jobs]
-        except Exception, e:
+        except Exception as e:
             error = str(e)
 
     return {'error': error}
