@@ -7,7 +7,7 @@
 {% set months, current_month = h.user_report_get_months() %}
 {% set organisations = h.get_report_schedule_organisation_list() %}
 {% set frequencies = h.get_scheduled_report_frequencies_list() %}
-{% asset 'datavic_reporting/datavic_reporting.js' %}
+{% asset 'datavic_reporting/reporting' %}
 
 <div id="datavic_reporting">
   <form action="/dashboard/report-schedule/{% if c.action == 'update' and data and data['id'] %}update/{{ data['id'] }}{% else %}create{% endif %}" method="post" class="form-horizontal">
