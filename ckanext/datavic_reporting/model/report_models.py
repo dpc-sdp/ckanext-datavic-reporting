@@ -3,8 +3,8 @@ import datetime
 import ckan.model as model
 from ckan.lib.base import *
 from ckan.model.types import make_uuid
-from sqlalchemy import Column, ForeignKey, MetaData, Table, types
-from sqlalchemy.orm import mapper, relation
+from sqlalchemy import Column, MetaData, Table, types
+from sqlalchemy.orm import mapper
 
 log = __import__("logging").getLogger(__name__)
 
@@ -98,7 +98,3 @@ report_job_table = Table(
 )
 
 mapper(ReportJob, report_job_table)
-
-
-def init_tables():
-    metadata.create_all(model.meta.engine)

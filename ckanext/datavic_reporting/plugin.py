@@ -1,12 +1,14 @@
 import logging
 
 import ckan.plugins as p
-import ckan.plugins.toolkit as toolkit
+import ckan.plugins.toolkit as tk
 
 import ckanext.datavic_reporting.authorisation as authorisation
 import ckanext.datavic_reporting.helpers as helpers
 import ckanext.datavic_reporting.validators as validators
 from ckanext.datavic_reporting.cli import get_commands
+
+from . import views
 
 log = logging.getLogger(__name__)
 
@@ -15,28 +17,26 @@ class DataVicReportingPlugin(p.SingletonPlugin):
     p.implements(p.IConfigurer)
     p.implements(p.IAuthFunctions)
     p.implements(p.ITemplateHelpers)
-    p.implements(p.IActions, inherit=True)
-    p.implements(p.IValidators, inherit=True)
+    p.implements(p.IActions)
+    p.implements(p.IValidators)
     p.implements(p.IClick)
     p.implements(p.IBlueprint)
 
     # IBlueprint
     def get_blueprint(self):
-        return helpers._register_blueprints()
+        return views.get_blueprints()
 
     # IConfigurer
     def update_config(self, config_):
-        toolkit.add_template_directory(config_, "templates")
-        toolkit.add_public_directory(config_, "public")
-        toolkit.add_resource("fanstatic", "datavic_reporting")
+        tk.add_template_directory(config_, "templates")
+        tk.add_resource("assets", "datavic_reporting")
 
-    ## IConfigurer interface
     def update_config_schema(self, schema):
         schema.update(
             {
                 "ckan.datavic_reporting.scheduled_reporting_frequencies": [
-                    toolkit.get_validator("ignore_missing"),
-                    str,
+                    tk.get_validator("ignore_missing"),
+                    tk.get_validator("unicode_safe"),
                 ]
             }
         )

@@ -1,7 +1,5 @@
-import json
 import logging
 import os
-from datetime import datetime
 
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
@@ -10,8 +8,7 @@ from flask.views import MethodView
 
 import ckanext.datavic_reporting.authorisation as authorisation
 import ckanext.datavic_reporting.helpers as helpers
-import ckanext.datavic_reporting.validators as validators
-from ckanext.datavic_reporting.report_models import ReportJob, ReportSchedule
+from ckanext.datavic_reporting.model import ReportJob, ReportSchedule
 
 get_action = toolkit.get_action
 h = toolkit.h

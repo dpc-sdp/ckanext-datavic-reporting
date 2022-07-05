@@ -4,26 +4,13 @@ import ckan.model as model
 import ckan.plugins.toolkit as tk
 import click
 
-from ckanext.datavic_reporting import constants, report_models
+from ckanext.datavic_reporting import constants
 
 
 @click.group(name="datavic_reporting", short_help="Manage reporting commands")
 def reporting():
     """Example of group of commands."""
     pass
-
-
-@reporting.command("initdb")
-def init_db_cmd():
-    """Initialise the database tables required for internal reporting"""
-    click.secho("Initializing reporting tables", fg="green")
-
-    try:
-        report_models.init_tables()
-    except Exception as e:
-        tk.error_shout(str(e))
-
-    click.secho("Reporting DB tables are setup", fg="green")
 
 
 @reporting.command("createjob")
@@ -83,4 +70,4 @@ def create_scheduled_report_job(ctx, frequency):
 
 
 def get_commands():
-    return [reporting, init_db_cmd, create_scheduled_report_job]
+    return [reporting, create_scheduled_report_job]

@@ -9,7 +9,7 @@ from ckan.model.user import User
 from sqlalchemy.orm import aliased
 
 from ckanext.datavic_reporting import authorisation, helpers
-from ckanext.datavic_reporting.report_models import ReportJob, ReportSchedule
+from ckanext.datavic_reporting.model import ReportJob, ReportSchedule
 
 _and_ = sqlalchemy.and_
 _session_ = model.Session

@@ -1,7 +1,7 @@
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
 
-from ckanext.datavic_reporting.report_models import ReportSchedule
+from ckanext.datavic_reporting.model import ReportSchedule
 
 
 def report_schedule_update(context, data_dict):

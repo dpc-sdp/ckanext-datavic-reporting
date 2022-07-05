@@ -3,14 +3,12 @@ import json
 import logging
 from datetime import datetime
 
-import ckan.lib.helpers as h
 import ckan.plugins.toolkit as toolkit
 from ckan.common import _
 from flask import Blueprint
 
 import ckanext.datavic_reporting.authorisation as authorisation
 import ckanext.datavic_reporting.helpers as helpers
-import ckanext.datavic_reporting.validators as validators
 
 get_action = toolkit.get_action
 

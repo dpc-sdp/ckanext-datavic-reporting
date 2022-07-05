@@ -11,7 +11,6 @@ import pkgutil
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
 import pytz
-import sqlalchemy
 from ckan.lib.navl.dictization_functions import unflatten
 from ckan.logic import clean_dict, parse_params, tuplize_dict
 from ckan.views.user import _extra_template_variables
@@ -21,8 +20,6 @@ from flask import Blueprint, send_from_directory
 import ckanext.datavic_reporting.authorisation as authorisation
 from ckanext.datavic_reporting.model import GroupTreeNode
 
-_and_ = sqlalchemy.and_
-_session_ = model.Session
 config = toolkit.config
 log = logging.getLogger(__name__)
 
@@ -594,23 +591,6 @@ def get_user_states():
         {"text": "Pending (Invite not active)", "value": "pending_invited"},
         {"text": "Pending (Review required)", "value": "pending_request"},
     ]
-
-
-def _register_blueprints():
-    """Return all blueprints defined in the `views` folder"""
-    blueprints = []
-
-    def is_blueprint(mm):
-        return isinstance(mm, Blueprint)
-
-    path = os.path.join(os.path.dirname(__file__), "views")
-
-    for loader, name, _ in pkgutil.iter_modules([path]):
-        module = loader.find_module(name).load_module(name)
-        for blueprint in inspect.getmembers(module, is_blueprint):
-            blueprints.append(blueprint[1])
-            log.info("Registered blueprint: {0!r}".format(blueprint[0]))
-    return blueprints
 
 
 def setup_extra_template_variables():

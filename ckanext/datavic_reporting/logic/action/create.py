@@ -7,7 +7,7 @@ from ckan.plugins import toolkit
 import ckanext.datavic_reporting.constants as constants
 import ckanext.datavic_reporting.helpers as helpers
 import ckanext.datavic_reporting.mailer as mailer
-from ckanext.datavic_reporting.report_models import ReportJob, ReportSchedule
+from ckanext.datavic_reporting.model import ReportJob, ReportSchedule
 
 log = logging.getLogger(__name__)
 
