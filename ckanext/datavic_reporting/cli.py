@@ -9,7 +9,7 @@ from ckanext.datavic_reporting import constants
 
 @click.group(name="datavic_reporting", short_help="Manage reporting commands")
 def reporting():
-    """Example of group of commands."""
+    """Manage reporting commands"""
     pass
 
 
@@ -70,4 +70,4 @@ def create_scheduled_report_job(ctx, frequency):
 
 
 def get_commands():
-    return [reporting, create_scheduled_report_job]
+    return [reporting]

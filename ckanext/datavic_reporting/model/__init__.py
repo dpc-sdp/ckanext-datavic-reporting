@@ -1,11 +1,11 @@
 from bisect import bisect_right
+
 from .report_models import ReportJob, ReportSchedule
 
 __all__ = [
     "GroupTreeNode",
     "ReportSchedule",
     "ReportJob",
-
 ]
 
 

@@ -10,7 +10,6 @@ from flask import Blueprint
 import ckanext.datavic_reporting.authorisation as authorisation
 import ckanext.datavic_reporting.helpers as helpers
 
-
 get_action = toolkit.get_action
 
 

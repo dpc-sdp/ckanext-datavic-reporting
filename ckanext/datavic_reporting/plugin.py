@@ -9,6 +9,7 @@ import ckanext.datavic_reporting.validators as validators
 from ckanext.datavic_reporting.cli import get_commands
 
 from . import views
+from .logic import action
 
 log = logging.getLogger(__name__)
 
@@ -46,8 +47,11 @@ class DataVicReportingPlugin(p.SingletonPlugin):
     # IAuthFunctions
     def get_auth_functions(self):
         return {
+            # !
             "user_dashboard_reports": authorisation.user_dashboard_reports,
+            # !
             "user_report_schedules": authorisation.user_report_schedules,
+
             "report_schedule_create": authorisation.report_schedule_create,
             "report_schedule_update": authorisation.report_schedule_update,
             "report_schedule_delete": authorisation.report_schedule_delete,
@@ -74,22 +78,8 @@ class DataVicReportingPlugin(p.SingletonPlugin):
 
     # IActions
     def get_actions(self):
-        from ckanext.datavic_reporting.logic.action import (
-            create,
-            delete,
-            get,
-            update,
-        )
+        action.get_actions()
 
-        return {
-            "report_schedule_create": create.report_schedule_create,
-            "report_schedule_update": update.report_schedule_update,
-            "report_schedule_delete": delete.report_schedule_delete,
-            "report_schedule_list": get.report_schedule_list,
-            "report_jobs": get.report_jobs,
-            "report_job_create": create.report_job_create,
-            "organisation_members": get.organisation_members,
-        }
 
     # IValidators
     def get_validators(self):

@@ -25,9 +25,7 @@ def sub_org_ids_validator(sub_org_ids, context):
         # Ignore checking if 'all-sub-organisations' group exists as we know it does not
         if sub_org.lower() == "all-sub-organisations":
             continue
-        tk.get_validator("group_id_or_name_exists")(
-            sub_org.strip(), context
-        )
+        tk.get_validator("group_id_or_name_exists")(sub_org.strip(), context)
     return sub_org_ids
 
 
@@ -53,16 +51,12 @@ def report_schedule_validator(data_dict, context, action="create"):
     errors = {}
     if action == "create":
         try:
-            tk.get_validator("report_type_validator")(
-                data_dict["report_type"]
-            )
+            tk.get_validator("report_type_validator")(data_dict["report_type"])
         except Exception:
             errors["report_type"] = ["Invalid or no report type selected"]
 
         try:
-            tk.get_validator("org_id_validator")(
-                data_dict["org_id"], context
-            )
+            tk.get_validator("org_id_validator")(data_dict["org_id"], context)
         except Exception:
             errors["org_id"] = ["Invalid or no organisation selected"]
 

@@ -6,12 +6,12 @@ Revises:
 Create Date: 2022-07-05 18:05:02.477433
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.engine.reflection import Inspector
 
 # revision identifiers, used by Alembic.
-revision = '390031f5cbb4'
+revision = "390031f5cbb4"
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -27,7 +27,11 @@ def upgrade():
     op.create_table(
         "report_schedule",
         sa.Column("id", sa.UnicodeText, primary_key=True),
-        sa.Column("timestamp", sa.DateTime, server_default=sa.func.current_timestamp()),
+        sa.Column(
+            "timestamp",
+            sa.DateTime,
+            server_default=sa.func.current_timestamp(),
+        ),
         sa.Column("user_id", sa.UnicodeText),
         sa.Column("report_type", sa.UnicodeText),
         sa.Column("org_id", sa.UnicodeText),
@@ -37,7 +41,6 @@ def upgrade():
         sa.Column("emails", sa.UnicodeText),
         sa.Column("state", sa.UnicodeText),
         sa.Column("last_completed", sa.DateTime),
-
     )
 
 
