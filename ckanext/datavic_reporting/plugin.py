@@ -13,7 +13,6 @@ log = logging.getLogger(__name__)
 class DataVicReportingPlugin(p.SingletonPlugin):
     p.implements(p.IConfigurer)
     p.implements(p.IAuthFunctions)
-    p.implements(p.IRoutes, inherit=True)
     p.implements(p.ITemplateHelpers)
     p.implements(p.IActions, inherit=True)
     p.implements(p.IValidators, inherit=True)
@@ -52,12 +51,6 @@ class DataVicReportingPlugin(p.SingletonPlugin):
             'report_schedule_list': authorisation.report_schedule_list,
             'report_jobs': authorisation.report_jobs,
         }
-
-    # IRoutes
-    ## TODO: Remove after validating blueprint rutes work
-    # def before_map(self, map):
-       
-    #     return map
 
     # ITemplateHelpers
     def get_helpers(self):
@@ -106,4 +99,3 @@ class DataVicReportingPlugin(p.SingletonPlugin):
     # IClick
     def get_commands(self):
         return get_commands()
-
