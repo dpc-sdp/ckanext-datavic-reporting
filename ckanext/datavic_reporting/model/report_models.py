@@ -1,26 +1,35 @@
+from __future__ import annotations
+
 import datetime
 
 import ckan.model as model
-from ckan.lib.base import *
 from ckan.model.types import make_uuid
-from sqlalchemy import Column, MetaData, Table, types
-from sqlalchemy.orm import mapper
 
+from sqlalchemy import Column, types
+
+
+from .base import Base
 log = __import__("logging").getLogger(__name__)
 
-metadata = MetaData()
 
+class ReportSchedule(Base):
+    __tablename__ = "report_schedule"
 
-class ReportSchedule(object):
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-        self.id = make_uuid()
-        self.timestamp = datetime.datetime.utcnow()
+    id = Column(types.UnicodeText, primary_key=True, default=make_uuid)
+    timestamp = Column(types.DateTime, default=datetime.datetime.utcnow)
+    user_id = Column(types.UnicodeText)
+    report_type = Column(types.UnicodeText)
+    org_id = Column(types.UnicodeText)
+    sub_org_ids = Column(types.UnicodeText)
+    frequency = Column(types.UnicodeText)
+    user_roles = Column(types.UnicodeText)
+    emails = Column(types.UnicodeText)
+    state = Column(types.UnicodeText)
+    last_completed = Column(types.DateTime)
 
     @classmethod
-    def get(self, id):
-        return model.Session.query(self).filter_by(id=id).first()
+    def get(cls, id):
+        return model.Session.query(cls).filter_by(id=id).one_or_none()
 
     def as_dict(self):
         return {
@@ -40,35 +49,21 @@ class ReportSchedule(object):
         }
 
 
-report_schedule_table = Table(
-    "report_schedule",
-    metadata,
-    Column("id", types.UnicodeText, primary_key=True, default=make_uuid),
-    Column("timestamp", types.DateTime, default=datetime.datetime.utcnow()),
-    Column("user_id", types.UnicodeText),
-    Column("report_type", types.UnicodeText),
-    Column("org_id", types.UnicodeText),
-    Column("sub_org_ids", types.UnicodeText),
-    Column("frequency", types.UnicodeText),
-    Column("user_roles", types.UnicodeText),
-    Column("emails", types.UnicodeText),
-    Column("state", types.UnicodeText),
-    Column("last_completed", types.DateTime),
-)
-
-mapper(ReportSchedule, report_schedule_table)
-
-
 class ReportJob(object):
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-        self.id = make_uuid()
-        self.timestamp = datetime.datetime.utcnow()
+    __tablename__ = "report_job"
+
+    id = Column(types.UnicodeText, primary_key=True, default=make_uuid)
+    report_schedule_id = Column(types.UnicodeText)
+    timestamp = Column(types.DateTime, default=datetime.datetime.utcnow)
+    filename = Column(types.UnicodeText)
+    frequency = Column(types.UnicodeText)
+    user_roles = Column(types.UnicodeText)
+    emails = Column(types.UnicodeText)
+    status = Column(types.UnicodeText)
 
     @classmethod
-    def get(self, id):
-        return model.Session.query(self).filter_by(id=id).first()
+    def get(cls, id):
+        return model.Session.query(cls).filter_by(id=id).one_or_none()
 
     def as_dict(self):
         return {
@@ -81,20 +76,3 @@ class ReportJob(object):
             "emails": self.emails,
             "status": self.status,
         }
-
-
-report_job_table = Table(
-    "report_job",
-    metadata,
-    Column("id", types.UnicodeText, primary_key=True, default=make_uuid),
-    Column("report_schedule_id", types.UnicodeText),
-    Column("timestamp", types.DateTime, default=datetime.datetime.utcnow()),
-    Column("filename", types.UnicodeText),
-    Column("frequency", types.UnicodeText),
-    Column("user_roles", types.UnicodeText),
-    Column("emails", types.UnicodeText),
-    # status: scheduled -> processing -> generated -> completed
-    Column("status", types.UnicodeText),
-)
-
-mapper(ReportJob, report_job_table)

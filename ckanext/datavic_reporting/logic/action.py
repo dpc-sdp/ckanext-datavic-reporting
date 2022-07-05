@@ -5,7 +5,7 @@ import logging
 
 import ckan.model as model
 import sqlalchemy
-from ckan.logic import side_effect_free
+from ckan.logic import NotAuthorized, side_effect_free, validate
 from ckan.model.group import Group, Member
 from ckan.model.user import User
 from ckan.plugins import toolkit
@@ -18,6 +18,8 @@ from ckanext.datavic_reporting import authorisation
 from ckanext.datavic_reporting.model import ReportJob, ReportSchedule
 from ckanext.toolbelt.decorators import Collector
 
+from . import schema
+
 _and_ = sqlalchemy.and_
 _session_ = model.Session
 log = logging.getLogger(__name__)
@@ -26,6 +28,7 @@ log = logging.getLogger(__name__)
 action, get_actions = Collector("datavic_reporting").split()
 
 
+@action("report_schedule_update")
 def report_schedule_update(context, data_dict):
     errors = {}
 
@@ -65,6 +68,7 @@ def report_schedule_update(context, data_dict):
     return {"errors": errors}
 
 
+@action("report_schedule_list")
 @side_effect_free
 def report_schedule_list(context, data_dict):
     state = data_dict.get("state", None)
@@ -95,6 +99,7 @@ def report_schedule_list(context, data_dict):
         return {"success": False, "error": str(e)}
 
 
+@action("report_jobs")
 @side_effect_free
 def report_jobs(context, data_dict):
     error = "Invalid or no report schedule ID provided."
@@ -118,6 +123,7 @@ def report_jobs(context, data_dict):
     return {"error": error}
 
 
+@action("organisation_members")
 def organisation_members(context, data_dict):
     """
 
@@ -158,7 +164,14 @@ def organisation_members(context, data_dict):
             conditions.append(User.state == "pending")
             conditions.append(User.reset_key == None)
 
-        if authorisation.is_sysadmin():
+        try:
+            toolkit.check_access("sysadmin", context, {})
+        except toolkit.NotAuthorized:
+            is_sysadmin = False
+        else:
+            is_sysadmin = True
+
+        if is_sysadmin:
             # Show all members for sysadmin users
             members = (
                 base_query.filter(_and_(*conditions))
@@ -206,6 +219,7 @@ def organisation_members(context, data_dict):
         log.error(str(e))
 
 
+@action("report_schedule_delete")
 @side_effect_free
 def report_schedule_delete(context, data_dict):
     error = "Invalid or no report schedule ID provided."
@@ -238,41 +252,22 @@ def report_schedule_delete(context, data_dict):
     return {"errors": error}
 
 
-def report_schedule_create(context, data_dict):
-    errors = {}
-    try:
-        # Check access - see authorisaton.py for implementation
-        toolkit.check_access("report_schedule_create", context, {})
+@action("report_schedule_create")
+@validate(schema.report_schedule_create)
+def report_schedule_create(context, data_dict) -> bool:
+    sess = context["session"]
+    ctx = context.copy()
+    ctx["ignore_auth"] = False
 
-        sub_org_ids = data_dict.get("sub_org_ids", "")
+    toolkit.check_access("report_schedule_create", ctx, {})
+    user = context["model"].User.get(context["user"])
 
-        # Validate data_dict inputs - see validators.py for implementations
-        validated_data_dict = toolkit.get_validator(
-            "report_schedule_validator"
-        )(data_dict, context)
+    schedule = ReportSchedule(state="active", user_id=user.id, **data_dict)
+    sess.add(schedule)
+    sess.commit()
+    return True
 
-        if validated_data_dict is data_dict:
-            schedule_dict = {
-                "user_id": toolkit.c.userobj.id,
-                "report_type": data_dict["report_type"],
-                "org_id": data_dict["org_id"],
-                "sub_org_ids": sub_org_ids,
-                "frequency": data_dict["frequency"],
-                "user_roles": data_dict["user_roles"],
-                "emails": data_dict["emails"],
-                "state": "active",
-            }
-            model.Session.add(ReportSchedule(**schedule_dict))
-            model.Session.commit()
-            return True
-        else:
-            errors = validated_data_dict
-    except Exception as e:
-        errors["exception"] = str(e)
-
-    return {"errors": errors}
-
-
+@action("report_job_create")
 def report_job_create(context, data_dict):
     errors = {}
     try:

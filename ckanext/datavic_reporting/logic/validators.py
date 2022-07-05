@@ -1,26 +1,16 @@
 import ckan.plugins.toolkit as tk
 
 import ckanext.datavic_reporting.helpers as helpers
+from ckanext.toolbelt.decorators import Collector
+
+validator, get_validators = Collector("datavic_reporting").split()
 
 Invalid = tk.Invalid
 
 
-def report_type_validator(report_type):
-    if report_type not in ["general"]:
-        raise Invalid("Invalid report_type")
-    return report_type
 
-
-def org_id_validator(org_id, context):
-    try:
-        tk.get_validator("group_id_or_name_exists")(org_id, context)
-    except Exception:
-        raise Invalid("Invalid organisation")
-    return org_id
-
-
-def sub_org_ids_validator(sub_org_ids, context):
-    sub_org_ids = sub_org_ids.split(",")
+@validator
+def sub_org_ids(sub_org_ids, context):
     for sub_org in sub_org_ids:
         # Ignore checking if 'all-sub-organisations' group exists as we know it does not
         if sub_org.lower() == "all-sub-organisations":
@@ -29,46 +19,30 @@ def sub_org_ids_validator(sub_org_ids, context):
     return sub_org_ids
 
 
+@validator("frequency_validator")
 def frequency_validator(frequency):
     if frequency not in helpers.get_scheduled_report_frequencies():
         raise Invalid("Invalid frequency")
     return frequency
 
 
+@validator("user_roles_validator")
 def user_roles_validator(user_roles, context):
     for user_role in user_roles.split(","):
         tk.get_validator("role_exists")(user_role.strip(), context)
     return user_roles
 
 
+@validator("emails_validator")
 def emails_validator(emails, context):
     for email in emails.split(","):
         tk.get_validator("email_validator")(email.strip(), context)
     return emails
 
 
+@validator("report_schedule_validator")
 def report_schedule_validator(data_dict, context, action="create"):
     errors = {}
-    if action == "create":
-        try:
-            tk.get_validator("report_type_validator")(data_dict["report_type"])
-        except Exception:
-            errors["report_type"] = ["Invalid or no report type selected"]
-
-        try:
-            tk.get_validator("org_id_validator")(data_dict["org_id"], context)
-        except Exception:
-            errors["org_id"] = ["Invalid or no organisation selected"]
-
-        sub_org_ids = data_dict.get("sub_org_ids", "")
-
-        if sub_org_ids:
-            try:
-                tk.get_validator("sub_org_ids_validator")(
-                    data_dict["sub_org_ids"], context
-                )
-            except Exception:
-                errors["sub_org_ids"] = "Invalid sub-organisation selection"
 
     try:
         tk.get_validator("frequency_validator")(data_dict["frequency"])
@@ -90,6 +64,7 @@ def report_schedule_validator(data_dict, context, action="create"):
     return errors if errors else data_dict
 
 
+@validator("report_job_validator")
 def report_job_validator(data_dict, context):
     errors = {}
 

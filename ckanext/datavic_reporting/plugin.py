@@ -5,11 +5,10 @@ import ckan.plugins.toolkit as tk
 
 import ckanext.datavic_reporting.authorisation as authorisation
 import ckanext.datavic_reporting.helpers as helpers
-import ckanext.datavic_reporting.validators as validators
 from ckanext.datavic_reporting.cli import get_commands
 
 from . import views
-from .logic import action
+from .logic import action, validators
 
 log = logging.getLogger(__name__)
 
@@ -78,21 +77,13 @@ class DataVicReportingPlugin(p.SingletonPlugin):
 
     # IActions
     def get_actions(self):
-        action.get_actions()
+        return action.get_actions()
 
 
     # IValidators
     def get_validators(self):
-        return {
-            "report_type_validator": validators.report_type_validator,
-            "org_id_validator": validators.org_id_validator,
-            "sub_org_ids_validator": validators.sub_org_ids_validator,
-            "frequency_validator": validators.frequency_validator,
-            "user_roles_validator": validators.user_roles_validator,
-            "emails_validator": validators.emails_validator,
-            "report_schedule_validator": validators.report_schedule_validator,
-            "report_job_validator": validators.report_job_validator,
-        }
+        return validators.get_validators()
+
 
     # IClick
     def get_commands(self):

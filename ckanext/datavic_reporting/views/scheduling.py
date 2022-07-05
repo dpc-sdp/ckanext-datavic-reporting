@@ -74,20 +74,19 @@ class ReportSchedulingCreate(MethodView):
 
     def post(self):
         params = helpers.clean_params(toolkit.request.form)
-        result = toolkit.get_action("report_schedule_create")(
-            helpers.get_context(), params
-        )
-        # handle success
-        if result is True:
-            h.flash_success("Report schedule created")
-            return h.redirect_to("scheduling.schedules")
-        # handle errors
-        elif result and result.get("errors", None):
+        try:
+            toolkit.get_action("report_schedule_create")(
+                helpers.get_context(), params
+            )
+        except toolkit.ValidationError as e:
             extra_vars = helpers.setup_extra_template_variables()
             extra_vars["data"] = params
-            extra_vars["errors"] = result.get("errors", None)
+            extra_vars["errors"] = e.error_dict
             h.flash_error("Please correct the errors below")
             return render("user/report_schedules.html", extra_vars=extra_vars)
+
+        h.flash_success("Report schedule created")
+        return h.redirect_to("scheduling.schedules")
 
 
 class ReportSchedulingUpdate(MethodView):
