@@ -1,26 +1,24 @@
 # encoding: utf-8
 
+import logging
+import mimetypes
+import os
 import smtplib
 import socket
-import logging
-from time import time
-import mimetypes
-from email import encoders
-from email.mime.multipart import MIMEMultipart
+from email import encoders, utils
+from email.header import Header
 from email.message import Message
 from email.mime.audio import MIMEAudio
 from email.mime.base import MIMEBase
 from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from email.header import Header
-from email import utils
-import os
+from time import time
 
 import ckan
 import ckan.common
-from ckan.common import config, _
+from ckan.common import _, config
 from ckan.lib.base import render
-
 
 log = logging.getLogger(__name__)
 

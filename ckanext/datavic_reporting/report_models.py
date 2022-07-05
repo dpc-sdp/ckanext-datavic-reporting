@@ -1,11 +1,10 @@
-import ckan.model as model
 import datetime
 
-from sqlalchemy import Table, Column, MetaData, ForeignKey
-from sqlalchemy import types
-from sqlalchemy.orm import mapper, relation
+import ckan.model as model
 from ckan.lib.base import *
 from ckan.model.types import make_uuid
+from sqlalchemy import Column, ForeignKey, MetaData, Table, types
+from sqlalchemy.orm import mapper, relation
 
 log = __import__("logging").getLogger(__name__)
 

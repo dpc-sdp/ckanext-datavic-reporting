@@ -1,24 +1,25 @@
-import ckanext.datavic_reporting.authorisation as authorisation
 import calendar
-import ckan.model as model
-import ckan.plugins.toolkit as toolkit
 import csv
 import datetime
+import inspect
 import logging
 import math
 import mimetypes
 import os
+import pkgutil
+
+import ckan.model as model
+import ckan.plugins.toolkit as toolkit
 import pytz
 import sqlalchemy
-import pkgutil
-import inspect
-
 from ckan.lib.navl.dictization_functions import unflatten
-from ckan.logic import clean_dict, tuplize_dict, parse_params
-from dateutil import parser
-from ckanext.datavic_reporting.model import GroupTreeNode
-from flask import send_from_directory, Blueprint
+from ckan.logic import clean_dict, parse_params, tuplize_dict
 from ckan.views.user import _extra_template_variables
+from dateutil import parser
+from flask import Blueprint, send_from_directory
+
+import ckanext.datavic_reporting.authorisation as authorisation
+from ckanext.datavic_reporting.model import GroupTreeNode
 
 _and_ = sqlalchemy.and_
 _session_ = model.Session

@@ -1,4 +1,5 @@
 import ckan.plugins.toolkit as toolkit
+
 import ckanext.datavic_reporting.helpers as helpers
 
 Invalid = toolkit.Invalid

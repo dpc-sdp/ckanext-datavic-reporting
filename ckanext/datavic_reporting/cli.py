@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import click
-import ckan.plugins.toolkit as tk
 import ckan.model as model
+import ckan.plugins.toolkit as tk
+import click
 
-from ckanext.datavic_reporting import report_models, constants
+from ckanext.datavic_reporting import constants, report_models
 
 
 @click.group(name="datavic_reporting", short_help="Manage reporting commands")

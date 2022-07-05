@@ -1,13 +1,15 @@
+import logging
+
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
-import logging
 import sqlalchemy
 from ckan.logic import side_effect_free
 from ckan.model.group import Group, Member
 from ckan.model.user import User
-from ckanext.datavic_reporting.report_models import ReportSchedule, ReportJob
-from ckanext.datavic_reporting import authorisation, helpers
 from sqlalchemy.orm import aliased
+
+from ckanext.datavic_reporting import authorisation, helpers
+from ckanext.datavic_reporting.report_models import ReportJob, ReportSchedule
 
 _and_ = sqlalchemy.and_
 _session_ = model.Session

@@ -1,10 +1,11 @@
+import logging
+
 import ckan.plugins as p
 import ckan.plugins.toolkit as toolkit
-import logging
-import ckanext.datavic_reporting.helpers as helpers
-import ckanext.datavic_reporting.authorisation as authorisation
-import ckanext.datavic_reporting.validators as validators
 
+import ckanext.datavic_reporting.authorisation as authorisation
+import ckanext.datavic_reporting.helpers as helpers
+import ckanext.datavic_reporting.validators as validators
 from ckanext.datavic_reporting.cli import get_commands
 
 log = logging.getLogger(__name__)
@@ -75,9 +76,9 @@ class DataVicReportingPlugin(p.SingletonPlugin):
     def get_actions(self):
         from ckanext.datavic_reporting.logic.action import (
             create,
-            update,
             delete,
             get,
+            update,
         )
 
         return {

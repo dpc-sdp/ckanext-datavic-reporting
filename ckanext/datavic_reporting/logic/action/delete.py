@@ -1,7 +1,8 @@
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
-from ckanext.datavic_reporting.report_models import ReportSchedule
 from ckan.logic import side_effect_free
+
+from ckanext.datavic_reporting.report_models import ReportSchedule
 
 
 @side_effect_free

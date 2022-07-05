@@ -1,5 +1,6 @@
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
+
 from ckanext.datavic_reporting.report_models import ReportSchedule
 
 
