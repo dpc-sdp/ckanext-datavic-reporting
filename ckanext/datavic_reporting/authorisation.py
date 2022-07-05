@@ -29,7 +29,7 @@ def user_report_schedules(context, data_dict=None):
     return authz.is_authorized("sysadmin", context)
 
 
-def report_schedule_create(context, data_dict):
+def datavic_reporting_schedule_create(context, data_dict):
     if authz.is_authorized_boolean("sysadmin", context):
         return {"success": True}
     return {

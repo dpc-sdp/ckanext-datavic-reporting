@@ -5,16 +5,15 @@ import logging
 
 import ckan.model as model
 import sqlalchemy
-from ckan.logic import NotAuthorized, side_effect_free, validate
+from ckan.logic import validate
 from ckan.model.group import Group, Member
 from ckan.model.user import User
-from ckan.plugins import toolkit
+import ckan.plugins.toolkit as tk
 from sqlalchemy.orm import aliased
 
 import ckanext.datavic_reporting.constants as constants
 import ckanext.datavic_reporting.helpers as helpers
 import ckanext.datavic_reporting.mailer as mailer
-from ckanext.datavic_reporting import authorisation
 from ckanext.datavic_reporting.model import ReportJob, ReportSchedule
 from ckanext.toolbelt.decorators import Collector
 
@@ -28,7 +27,35 @@ log = logging.getLogger(__name__)
 action, get_actions = Collector("datavic_reporting").split()
 
 
+@action("datavic_reporting_schedule_create")
+@validate(schema.datavic_reporting_schedule_create)
+def datavic_reporting_schedule_create(context, data_dict):
+    """Create new report schedule
+
+    Args:
+        user_id(str, optional): ID of the schedule owner. Defaults to the current user's ID
+        report_type(str): At the moment, only `general` type supported
+        userorg_id(str): ID of the organization for reporting
+        sub_org_ids(str, optional): comma-separated list of groups for reporting
+        user_roles(str): comma-separated list of user-roles for reporting
+        emails(str): comma-separated list of emails for reporting
+        frequency(str): frequency of reporting
+    """
+    sess = context["session"]
+    tk.check_access("datavic_reporting_schedule_create", context, {})
+
+    if "user_id" not in data_dict:
+        user = context["model"].User.get(context["user"])
+        data_dict["user_id"] = user.id
+
+    schedule = ReportSchedule(state="active", **data_dict)
+    sess.add(schedule)
+    sess.commit()
+    return schedule.as_dict()
+
+
 @action("report_schedule_update")
+# @validate(schema.report_schedule_update)
 def report_schedule_update(context, data_dict):
     errors = {}
 
@@ -38,7 +65,7 @@ def report_schedule_update(context, data_dict):
     if id and model.is_id(id):
         try:
             # Check access - see authorisaton.py for implementation
-            toolkit.check_access("report_schedule_update", context, {})
+            tk.check_access("report_schedule_update", context, {})
 
             # Load the record
             schedule = ReportSchedule.get(id)
@@ -50,7 +77,7 @@ def report_schedule_update(context, data_dict):
                         setattr(schedule, field, value)
 
                 # Validate data_dict inputs - see validators.py for implementations
-                validated_data_dict = toolkit.get_validator(
+                validated_data_dict = tk.get_validator(
                     "report_schedule_validator"
                 )(data_dict, context, "update")
 
@@ -69,13 +96,13 @@ def report_schedule_update(context, data_dict):
 
 
 @action("report_schedule_list")
-@side_effect_free
+@tk.side_effect_free
 def report_schedule_list(context, data_dict):
     state = data_dict.get("state", None)
     frequency = data_dict.get("frequency", None)
     try:
         # Check access - see authorisaton.py for implementation
-        toolkit.check_access("report_schedule_list", context, {})
+        tk.check_access("report_schedule_list", context, {})
         if state and frequency:
             scheduled_reports = (
                 model.Session.query(ReportSchedule)
@@ -100,7 +127,7 @@ def report_schedule_list(context, data_dict):
 
 
 @action("report_jobs")
-@side_effect_free
+@tk.side_effect_free
 def report_jobs(context, data_dict):
     error = "Invalid or no report schedule ID provided."
 
@@ -110,7 +137,7 @@ def report_jobs(context, data_dict):
     if report_schedule_id and model.is_id(report_schedule_id):
         try:
             # Check access - see authorisaton.py for implementation
-            toolkit.check_access("report_jobs", context, {})
+            tk.check_access("report_jobs", context, {})
             report_jobs = (
                 model.Session.query(ReportJob)
                 .filter_by(report_schedule_id=report_schedule_id)
@@ -165,8 +192,8 @@ def organisation_members(context, data_dict):
             conditions.append(User.reset_key == None)
 
         try:
-            toolkit.check_access("sysadmin", context, {})
-        except toolkit.NotAuthorized:
+            tk.check_access("sysadmin", context, {})
+        except tk.NotAuthorized:
             is_sysadmin = False
         else:
             is_sysadmin = True
@@ -184,7 +211,7 @@ def organisation_members(context, data_dict):
 
             return members.all()
         else:
-            toolkit.check_access("user_dashboard_reports", context, {})
+            tk.check_access("user_dashboard_reports", context, {})
 
             # For authenticated users who are an admin of at least one organisation
             # only show members of organisations they are an admin of
@@ -220,7 +247,7 @@ def organisation_members(context, data_dict):
 
 
 @action("report_schedule_delete")
-@side_effect_free
+@tk.side_effect_free
 def report_schedule_delete(context, data_dict):
     error = "Invalid or no report schedule ID provided."
 
@@ -229,13 +256,13 @@ def report_schedule_delete(context, data_dict):
     # Check to make sure `id` looks like a UUID
     if id and model.is_id(id):
         try:
-            toolkit.check_access("report_schedule_delete", context, {"id": id})
+            tk.check_access("report_schedule_delete", context, {"id": id})
 
             # Load the record
             schedule = ReportSchedule.get(id)
             if schedule:
                 # If a schedule has reports - mark it as deleted
-                reports = toolkit.get_action("report_jobs")(
+                reports = tk.get_action("report_jobs")(
                     context, {"report_schedule_id": id}
                 )
                 if reports:
@@ -252,31 +279,16 @@ def report_schedule_delete(context, data_dict):
     return {"errors": error}
 
 
-@action("report_schedule_create")
-@validate(schema.report_schedule_create)
-def report_schedule_create(context, data_dict) -> bool:
-    sess = context["session"]
-    ctx = context.copy()
-    ctx["ignore_auth"] = False
-
-    toolkit.check_access("report_schedule_create", ctx, {})
-    user = context["model"].User.get(context["user"])
-
-    schedule = ReportSchedule(state="active", user_id=user.id, **data_dict)
-    sess.add(schedule)
-    sess.commit()
-    return True
-
 @action("report_job_create")
 def report_job_create(context, data_dict):
     errors = {}
     try:
-        validated_data_dict = toolkit.get_validator("report_job_validator")(
+        validated_data_dict = tk.get_validator("report_job_validator")(
             data_dict, context
         )
 
         if validated_data_dict is data_dict:
-            report_job_path = toolkit.config.get(
+            report_job_path = tk.config.get(
                 "ckan.datavic_reporting.scheduled_reports_path"
             )
             org_id = data_dict.get("org_id")
@@ -325,8 +337,8 @@ def report_job_create(context, data_dict):
 
             if user_emails and len(user_emails) > 0:
                 extra_vars = {
-                    "site_title": toolkit.config.get("ckan.site_title"),
-                    "site_url": toolkit.config.get("ckan.site_url"),
+                    "site_title": tk.config.get("ckan.site_title"),
+                    "site_url": tk.config.get("ckan.site_url"),
                     "org_id": organisation,
                     "frequency": data_dict.get("frequency"),
                     "date": now.strftime("%Y") + " " + now.strftime("%B"),

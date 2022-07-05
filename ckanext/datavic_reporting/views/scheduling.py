@@ -75,7 +75,7 @@ class ReportSchedulingCreate(MethodView):
     def post(self):
         params = helpers.clean_params(toolkit.request.form)
         try:
-            toolkit.get_action("report_schedule_create")(
+            toolkit.get_action("datavic_reporting_schedule_create")(
                 helpers.get_context(), params
             )
         except toolkit.ValidationError as e:

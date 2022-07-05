@@ -11,7 +11,7 @@ Invalid = tk.Invalid
 
 @validator
 def sub_org_ids(sub_org_ids, context):
-    for sub_org in sub_org_ids:
+    for sub_org in sub_org_ids.split(","):
         # Ignore checking if 'all-sub-organisations' group exists as we know it does not
         if sub_org.lower() == "all-sub-organisations":
             continue

@@ -51,7 +51,7 @@ class DataVicReportingPlugin(p.SingletonPlugin):
             # !
             "user_report_schedules": authorisation.user_report_schedules,
 
-            "report_schedule_create": authorisation.report_schedule_create,
+            "datavic_reporting_schedule_create": authorisation.datavic_reporting_schedule_create,
             "report_schedule_update": authorisation.report_schedule_update,
             "report_schedule_delete": authorisation.report_schedule_delete,
             "report_schedule_list": authorisation.report_schedule_list,

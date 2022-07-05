@@ -27,7 +27,7 @@ To run the paster command (Replace {frequency} with 'monthly' or 'yearly'):
 
 This extension adds the following endpoints to the standard CKAN API (e.g. http://datavic-ckan.docker.amazee.io/api/action/ACTION_NAME):
 
-### report_schedule_create
+### datavic_reporting_schedule_create
 
 __verb:__ POST
 
