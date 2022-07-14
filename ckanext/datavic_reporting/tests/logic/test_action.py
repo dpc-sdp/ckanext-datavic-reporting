@@ -71,3 +71,36 @@ class TestScheduleUpdate:
             emails=email,
         )
         assert result["emails"] == email
+
+
+@pytest.mark.usefixtures("with_plugins", "clean_db")
+class TestScheduleList:
+    def test_list_empty(self):
+        result = call_action("datavic_reporting_schedule_list")
+        assert result == []
+
+    def test_list_all(self, report_schedule_factory):
+        report_schedule_factory()
+        report_schedule_factory()
+
+        result = call_action("datavic_reporting_schedule_list")
+        assert len(result) == 2
+
+    def test_by_frequency(self, report_schedule_factory):
+        daily = report_schedule_factory(frequency="daily")
+        monthly = report_schedule_factory(frequency="monthly")
+
+        result = call_action("datavic_reporting_schedule_list", frequency="daily")
+        assert result == [daily]
+
+        result = call_action("datavic_reporting_schedule_list", frequency="monthly")
+        assert result == [monthly]
+
+    def test_by_state(self, report_schedule_factory):
+        active = report_schedule_factory()
+
+        result = call_action("datavic_reporting_schedule_list", state="active")
+        assert result == [active]
+
+        result = call_action("datavic_reporting_schedule_list", state="pending")
+        assert result == []
