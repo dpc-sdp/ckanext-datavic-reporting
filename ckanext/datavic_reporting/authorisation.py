@@ -38,7 +38,7 @@ def datavic_reporting_schedule_create(context, data_dict):
     }
 
 
-def report_schedule_update(context, data_dict):
+def datavic_reporting_schedule_update(context, data_dict):
     if authz.is_authorized_boolean("sysadmin", context):
         return {"success": True}
     return {
@@ -56,7 +56,7 @@ def report_schedule_delete(context, data_dict):
     }
 
 
-def report_schedule_list(context, data_dict):
+def datavic_reporting_schedule_list(context, data_dict):
     if authz.is_authorized_boolean("sysadmin", context):
         return {"success": True}
     return {

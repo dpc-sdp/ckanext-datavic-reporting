@@ -8,7 +8,6 @@ validator, get_validators = Collector("datavic_reporting").split()
 Invalid = tk.Invalid
 
 
-
 @validator
 def sub_org_ids(sub_org_ids, context):
     for sub_org in sub_org_ids.split(","):

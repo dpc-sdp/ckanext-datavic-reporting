@@ -40,7 +40,7 @@ __params:__
     user_roles - comma separated list of org roles, e.g. 'admin,editor'
     emails - comma separated list of email addresses
 
-### report_schedule_update
+### datavic_reporting_schedule_update
 
 __verb:__ POST
 
@@ -62,7 +62,7 @@ __params:__
 
     id - report_schedule.id record to be deleted
 
-### report_schedule_list
+### datavic_reporting_schedule_list
 
 
 __verb:__ GET

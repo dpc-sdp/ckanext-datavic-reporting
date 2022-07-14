@@ -27,9 +27,9 @@ log = logging.getLogger(__name__)
 action, get_actions = Collector("datavic_reporting").split()
 
 
-@action("datavic_reporting_schedule_create")
-@validate(schema.datavic_reporting_schedule_create)
-def datavic_reporting_schedule_create(context, data_dict):
+@action
+@validate(schema.schedule_create)
+def schedule_create(context, data_dict):
     """Create new report schedule
 
     Args:
@@ -54,76 +54,55 @@ def datavic_reporting_schedule_create(context, data_dict):
     return schedule.as_dict()
 
 
-@action("report_schedule_update")
-# @validate(schema.report_schedule_update)
-def report_schedule_update(context, data_dict):
-    errors = {}
+@action
+@validate(schema.schedule_update)
+def schedule_update(context, data_dict):
+    """Create update report schedule
 
-    id = data_dict.get("id", None)
+    Args:
+        id(str): ID of the report schedule record
+        user_roles(str, optional): comma-separated list of user-roles for reporting
+        emails(str, optional): comma-separated list of emails for reporting
+        frequency(str, optional): frequency of reporting
+    """
+    tk.check_access("datavic_reporting_schedule_update", context, {})
 
-    # Check to make sure `id` looks like a UUID
-    if id and model.is_id(id):
-        try:
-            # Check access - see authorisaton.py for implementation
-            tk.check_access("report_schedule_update", context, {})
+    schedule = ReportSchedule.get(data_dict["id"])
+    if not schedule:
+        raise tk.ObjectNotFound()
 
-            # Load the record
-            schedule = ReportSchedule.get(id)
-            if schedule:
-                # The list of fields that can be updated is controlled here
-                for field in ["frequency", "user_roles", "emails"]:
-                    value = data_dict.get(field, None)
-                    if value:
-                        setattr(schedule, field, value)
+    for k, v in data_dict.items():
+        setattr(schedule, k, v)
+    context["session"].commit()
 
-                # Validate data_dict inputs - see validators.py for implementations
-                validated_data_dict = tk.get_validator(
-                    "report_schedule_validator"
-                )(data_dict, context, "update")
-
-                if validated_data_dict is data_dict:
-                    model.Session.add(schedule)
-                    model.Session.commit()
-                    return True
-                else:
-                    errors = validated_data_dict
-        except Exception as e:
-            errors["exception"] = str(e)
-    else:
-        errors = "Invalid or no report schedule ID provided."
-
-    return {"errors": errors}
+    return schedule.as_dict()
 
 
-@action("report_schedule_list")
+@action
 @tk.side_effect_free
-def report_schedule_list(context, data_dict):
+@validate(schema.schedule_list)
+def schedule_list(context, data_dict):
+    """List report schedules
+
+    Args:
+        frequency(str, optional): frequency of reporting
+        frequency(str, optional): state of the report
+
+    """
+    tk.check_access("datavic_reporting_schedule_list", context, {})
+
     state = data_dict.get("state", None)
     frequency = data_dict.get("frequency", None)
-    try:
-        # Check access - see authorisaton.py for implementation
-        tk.check_access("report_schedule_list", context, {})
-        if state and frequency:
-            scheduled_reports = (
-                model.Session.query(ReportSchedule)
-                .filter_by(state=state)
-                .filter_by(frequency=frequency)
-                .all()
-            )
-        elif state:
-            scheduled_reports = (
-                model.Session.query(ReportSchedule)
-                .filter_by(state=state)
-                .all()
-            )
-        else:
-            scheduled_reports = model.Session.query(ReportSchedule).all()
-        return {
-            "success": True,
-            "result": [s.as_dict() for s in scheduled_reports],
-        }
-    except Exception as e:
-        return {"success": False, "error": str(e)}
+
+    q = model.Session.query(ReportSchedule)
+
+    if state:
+        q = q.filter_by(state=state)
+
+    if frequency:
+        q = q.filter_by(frequency=frequency)
+
+    return [s.as_dict() for s in q]
 
 
 @action("report_jobs")

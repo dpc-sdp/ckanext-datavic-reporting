@@ -42,16 +42,14 @@ def create_scheduled_report_job(ctx, frequency):
             tk.g.userobj = model.User.get(admin_user["name"])
             context["user"] = admin_user["name"]
 
-            result = tk.get_action("report_schedule_list")(
+            result = tk.get_action("datavic_reporting_schedule_list")(
                 context,
                 data_dict={
                     "state": constants.States.Active,
                     "frequency": frequency,
                 },
             )
-            if result.get("success", False) == False:
-                raise Exception(result.get("error", None))
-            for report_schedule in result.get("result"):
+            for report_schedule in result:
                 # Generate a CSV report
                 result = tk.get_action("report_job_create")(
                     context, data_dict=report_schedule

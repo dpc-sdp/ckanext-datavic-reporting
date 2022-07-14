@@ -9,6 +9,7 @@ from sqlalchemy import Column, types
 
 
 from .base import Base
+
 log = __import__("logging").getLogger(__name__)
 
 

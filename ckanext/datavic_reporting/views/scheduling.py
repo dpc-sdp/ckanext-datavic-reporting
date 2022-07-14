@@ -101,7 +101,7 @@ class ReportSchedulingUpdate(MethodView):
     def post(self, id):
         params = helpers.clean_params(toolkit.request.form)
         params["id"] = id
-        result = toolkit.get_action("report_schedule_update")(
+        result = toolkit.get_action("datavic_reporting_schedule_update")(
             helpers.get_context(), params
         )
         if result is True:

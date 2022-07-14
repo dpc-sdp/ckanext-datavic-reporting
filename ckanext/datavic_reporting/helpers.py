@@ -454,8 +454,10 @@ def clean_params(params):
 
 
 def get_report_schedules(state=None):
-    result = toolkit.get_action("report_schedule_list")({}, {"state": state})
-    return result.get("result") if result.get("success", False) == True else []
+    result = toolkit.get_action("datavic_reporting_schedule_list")(
+        {}, {"state": state}
+    )
+    return result
 
 
 def get_report_schedule_organisation_list():

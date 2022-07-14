@@ -50,11 +50,10 @@ class DataVicReportingPlugin(p.SingletonPlugin):
             "user_dashboard_reports": authorisation.user_dashboard_reports,
             # !
             "user_report_schedules": authorisation.user_report_schedules,
-
             "datavic_reporting_schedule_create": authorisation.datavic_reporting_schedule_create,
-            "report_schedule_update": authorisation.report_schedule_update,
+            "datavic_reporting_schedule_update": authorisation.datavic_reporting_schedule_update,
             "report_schedule_delete": authorisation.report_schedule_delete,
-            "report_schedule_list": authorisation.report_schedule_list,
+            "datavic_reporting_schedule_list": authorisation.datavic_reporting_schedule_list,
             "report_jobs": authorisation.report_jobs,
         }
 
@@ -79,11 +78,9 @@ class DataVicReportingPlugin(p.SingletonPlugin):
     def get_actions(self):
         return action.get_actions()
 
-
     # IValidators
     def get_validators(self):
         return validators.get_validators()
-
 
     # IClick
     def get_commands(self):
