@@ -127,7 +127,7 @@ def job_list(context, data_dict):
 @validate(schema.job_create)
 def job_create(context, data_dict):
     report_job_path = tk.config.get(
-        "ckan.datavic_reporting.scheduled_reports_path"
+        "ckan.datavic_reporting.scheduled_reports_path", "/tmp"
     )
     sub_org_ids = data_dict.get("sub_org_ids")
     organisation = (

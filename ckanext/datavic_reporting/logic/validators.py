@@ -37,27 +37,3 @@ def emails_validator(emails, context):
     for email in emails.split(","):
         tk.get_validator("email_validator")(email.strip(), context)
     return emails
-
-
-@validator("report_schedule_validator")
-def report_schedule_validator(data_dict, context, action="create"):
-    errors = {}
-
-    try:
-        tk.get_validator("frequency_validator")(data_dict["frequency"])
-    except Exception:
-        errors["frequency"] = ["Invalid frequency selection"]
-
-    try:
-        tk.get_validator("user_roles_validator")(
-            data_dict["user_roles"], context
-        )
-    except Exception:
-        errors["user_roles"] = ["Invalid user role selection"]
-
-    try:
-        tk.get_validator("emails_validator")(data_dict["emails"], context)
-    except Exception:
-        errors["emails"] = ["Invalid email entry"]
-
-    return errors if errors else data_dict
