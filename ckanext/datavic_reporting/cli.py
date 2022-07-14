@@ -51,15 +51,9 @@ def create_scheduled_report_job(ctx, frequency):
             )
             for report_schedule in result:
                 # Generate a CSV report
-                result = tk.get_action("report_job_create")(
+                tk.get_action("datavic_reporting_job_create")(
                     context, data_dict=report_schedule
                 )
-                if result.get("success", False) == False:
-                    tk.error_shout(
-                        "Error creating report job: {0}".format(
-                            result.get("error", None)
-                        )
-                    )
     except Exception as ex:
         tk.error_shout(
             "Error running scheduled report frequency {0}".format(frequency)

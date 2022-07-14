@@ -44,7 +44,7 @@ def jobs(id=None):
     schedule = ReportSchedule.get(id)
     if schedule:
         extra_vars["schedule"] = schedule.as_dict()
-        extra_vars["jobs"] = toolkit.get_action("report_jobs")(
+        extra_vars["jobs"] = toolkit.get_action("datavic_reporting_job_list")(
             helpers.get_context(), {"report_schedule_id": id}
         )
 

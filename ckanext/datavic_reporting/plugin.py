@@ -54,7 +54,7 @@ class DataVicReportingPlugin(p.SingletonPlugin):
             "datavic_reporting_schedule_update": authorisation.datavic_reporting_schedule_update,
             "report_schedule_delete": authorisation.report_schedule_delete,
             "datavic_reporting_schedule_list": authorisation.datavic_reporting_schedule_list,
-            "report_jobs": authorisation.report_jobs,
+            "datavic_reporting_job_list": authorisation.datavic_reporting_job_list,
         }
 
     # ITemplateHelpers

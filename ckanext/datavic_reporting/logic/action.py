@@ -105,28 +105,88 @@ def schedule_list(context, data_dict):
     return [s.as_dict() for s in q]
 
 
-@action("report_jobs")
+@action
 @tk.side_effect_free
-def report_jobs(context, data_dict):
-    error = "Invalid or no report schedule ID provided."
+@validate(schema.job_list)
+def job_list(context, data_dict):
+    """List report jobs
 
-    report_schedule_id = data_dict.get("report_schedule_id", None)
+    Args:
+        report_schedule_id(str): ID of related report schedule
+    """
+    tk.check_access("datavic_reporting_job_list", context, {})
+    report_jobs = (
+        context["session"]
+        .query(ReportJob)
+        .filter_by(report_schedule_id=data_dict["report_schedule_id"])
+    )
+    return [r.as_dict() for r in report_jobs]
 
-    # Check to make sure `id` looks like a UUID
-    if report_schedule_id and model.is_id(report_schedule_id):
-        try:
-            # Check access - see authorisaton.py for implementation
-            tk.check_access("report_jobs", context, {})
-            report_jobs = (
-                model.Session.query(ReportJob)
-                .filter_by(report_schedule_id=report_schedule_id)
-                .all()
-            )
-            return [r.as_dict() for r in report_jobs]
-        except Exception as e:
-            error = str(e)
 
-    return {"error": error}
+@action
+@validate(schema.job_create)
+def job_create(context, data_dict):
+    report_job_path = tk.config.get(
+        "ckan.datavic_reporting.scheduled_reports_path"
+    )
+    sub_org_ids = data_dict.get("sub_org_ids")
+    organisation = (
+        data_dict.get("org_id")
+        if not sub_org_ids or sub_org_ids == "all-sub-organisations"
+        else sub_org_ids
+    )
+
+    now = datetime.datetime.now()
+    path_date = now.strftime("%Y") + "/" + now.strftime("%m")
+    path = "{0}/{1}/{2}/".format(report_job_path, organisation, path_date)
+
+    filename = "general_report_{0}.csv".format(now.isoformat())
+    file_path = path + filename
+
+    report_job_dict = {
+        "report_schedule_id": data_dict["id"],
+        "filename": file_path,
+        "frequency": data_dict["frequency"],
+        "user_roles": data_dict["user_roles"],
+        "emails": data_dict["emails"],
+        "status": constants.Statuses.Processing,
+    }
+
+    report_job = ReportJob(**report_job_dict)
+    model.Session.add(report_job)
+    model.Session.commit()
+    helpers.generate_general_report(path, filename, None, None, organisation)
+    report_job.status = constants.Statuses.Generated
+    model.Session.commit()
+
+    user_emails = []
+    for user_role in data_dict["user_roles"].split(","):
+        role_emails = helpers.get_organisation_role_emails(
+            context, organisation, user_role
+        )
+        if role_emails:
+            user_emails.extend(role_emails)
+
+    user_emails.extend(data_dict["emails"].split(","))
+
+    if user_emails:
+        extra_vars = {
+            "site_title": tk.config.get("ckan.site_title"),
+            "site_url": tk.config.get("ckan.site_url"),
+            "org_id": organisation,
+            "frequency": data_dict["frequency"],
+            "date": now.strftime("%Y") + " " + now.strftime("%B"),
+            "file_path": file_path,
+        }
+        mailer.send_scheduled_report_email(
+            user_emails, "scheduled_report", extra_vars
+        )
+        report_job.status = constants.Statuses.EmailsSent
+    else:
+        report_job.status = constants.Statuses.NoEmails
+
+    model.Session.commit()
+    return report_job.as_dict()
 
 
 @action("organisation_members")
@@ -241,7 +301,7 @@ def report_schedule_delete(context, data_dict):
             schedule = ReportSchedule.get(id)
             if schedule:
                 # If a schedule has reports - mark it as deleted
-                reports = tk.get_action("report_jobs")(
+                reports = tk.get_action("datavic_reporting_job_list")(
                     context, {"report_schedule_id": id}
                 )
                 if reports:
@@ -256,88 +316,3 @@ def report_schedule_delete(context, data_dict):
             error = str(e)
 
     return {"errors": error}
-
-
-@action("report_job_create")
-def report_job_create(context, data_dict):
-    errors = {}
-    try:
-        validated_data_dict = tk.get_validator("report_job_validator")(
-            data_dict, context
-        )
-
-        if validated_data_dict is data_dict:
-            report_job_path = tk.config.get(
-                "ckan.datavic_reporting.scheduled_reports_path"
-            )
-            org_id = data_dict.get("org_id")
-            sub_org_ids = data_dict.get("sub_org_ids")
-            organisation = (
-                org_id
-                if not sub_org_ids or sub_org_ids == "all-sub-organisations"
-                else sub_org_ids
-            )
-            now = datetime.datetime.now()
-            path_date = now.strftime("%Y") + "/" + now.strftime("%m")
-            path = "{0}/{1}/{2}/".format(
-                report_job_path, organisation, path_date
-            )
-            filename = "general_report_{0}.csv".format(now.isoformat())
-            file_path = path + filename
-
-            report_job_dict = {
-                "report_schedule_id": data_dict["id"],
-                "filename": file_path,
-                "frequency": data_dict["frequency"],
-                "user_roles": data_dict["user_roles"],
-                "emails": data_dict["emails"],
-                "status": constants.Statuses.Processing,
-            }
-            report_job = ReportJob(**report_job_dict)
-            model.Session.add(report_job)
-            model.Session.commit()
-            helpers.generate_general_report(
-                path, filename, None, None, organisation
-            )
-            report_job.status = constants.Statuses.Generated
-            model.Session.commit()
-
-            user_emails = []
-            if data_dict.get("user_roles"):
-                for user_role in data_dict.get("user_roles").split(","):
-                    role_emails = helpers.get_organisation_role_emails(
-                        context, organisation, user_role
-                    )
-                    if role_emails:
-                        user_emails.extend(role_emails)
-
-            if data_dict.get("emails"):
-                user_emails.extend(data_dict.get("emails").split(","))
-
-            if user_emails and len(user_emails) > 0:
-                extra_vars = {
-                    "site_title": tk.config.get("ckan.site_title"),
-                    "site_url": tk.config.get("ckan.site_url"),
-                    "org_id": organisation,
-                    "frequency": data_dict.get("frequency"),
-                    "date": now.strftime("%Y") + " " + now.strftime("%B"),
-                    "file_path": file_path,
-                }
-                mailer.send_scheduled_report_email(
-                    user_emails, "scheduled_report", extra_vars
-                )
-                report_job.status = constants.Statuses.EmailsSent
-            else:
-                report_job.status = constants.Statuses.NoEmails
-
-            model.Session.commit()
-            return {"success": True}
-        else:
-            errors = validated_data_dict
-    except Exception as e:
-        report_job.status = constants.Statuses.Failed
-        model.Session.commit()
-        log.error(e)
-        errors["exception"] = str(e)
-
-    return {"success": False, "error": errors}

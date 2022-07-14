@@ -38,7 +38,10 @@ def get_user():
 
 
 def get_username():
-    return get_user().name
+    try:
+        return toolkit.g.user
+    except AttributeError:
+        pass
 
 
 def user_report_get_years():
@@ -93,7 +96,7 @@ def get_report_date_range(year, month):
 def get_organisation_list():
     organisations = []
     top_level_organisations = get_top_level_organisation_list()
-    if toolkit.h.check_access("sysadmin"):
+    if not toolkit.request or toolkit.h.check_access("sysadmin"):
         organisations = top_level_organisations
     elif authorisation.has_user_permission_for_some_org(
         get_username(), "admin"
@@ -151,7 +154,7 @@ def get_organisation_children(organisation_name):
 def get_organisation_children_names(organisation_name):
     organisation_names = []
 
-    if toolkit.h.check_access("sysadmin"):
+    if not toolkit.request or toolkit.h.check_access("sysadmin"):
         if organisation_name != "all-organisations":
             organisation_names.append(organisation_name)
             for (
@@ -463,7 +466,7 @@ def get_report_schedules(state=None):
 def get_report_schedule_organisation_list():
     organisations = []
     top_level_organisations = get_top_level_organisation_list()
-    if toolkit.h.check_access("sysadmin"):
+    if not toolkit.request or toolkit.h.check_access("sysadmin"):
         organisations = top_level_organisations
 
     organisations.insert(0, {"value": "", "text": "Please select"})

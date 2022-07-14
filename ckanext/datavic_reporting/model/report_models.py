@@ -50,7 +50,7 @@ class ReportSchedule(Base):
         }
 
 
-class ReportJob(object):
+class ReportJob(Base):
     __tablename__ = "report_job"
 
     id = Column(types.UnicodeText, primary_key=True, default=make_uuid)

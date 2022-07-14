@@ -90,10 +90,14 @@ class TestScheduleList:
         daily = report_schedule_factory(frequency="daily")
         monthly = report_schedule_factory(frequency="monthly")
 
-        result = call_action("datavic_reporting_schedule_list", frequency="daily")
+        result = call_action(
+            "datavic_reporting_schedule_list", frequency="daily"
+        )
         assert result == [daily]
 
-        result = call_action("datavic_reporting_schedule_list", frequency="monthly")
+        result = call_action(
+            "datavic_reporting_schedule_list", frequency="monthly"
+        )
         assert result == [monthly]
 
     def test_by_state(self, report_schedule_factory):
@@ -102,5 +106,82 @@ class TestScheduleList:
         result = call_action("datavic_reporting_schedule_list", state="active")
         assert result == [active]
 
-        result = call_action("datavic_reporting_schedule_list", state="pending")
+        result = call_action(
+            "datavic_reporting_schedule_list", state="pending"
+        )
         assert result == []
+
+
+@pytest.mark.usefixtures("with_plugins", "clean_db", "with_request_context")
+class TestJobCreate:
+    def test_basic(self, faker, report_schedule, sysadmin, organization):
+        call_action(
+            "datavic_reporting_job_create",
+            {"user": sysadmin["name"]},
+            id=report_schedule["id"],
+            org_id=organization["id"],
+            frequency="monthly",
+            user_roles="member",
+            emails=faker.email(),
+        )
+
+        items = call_action(
+            "datavic_reporting_job_list",
+            report_schedule_id=report_schedule["id"],
+        )
+
+        assert len(items) == 1
+
+    def test_factory(self, report_job):
+        items = call_action(
+            "datavic_reporting_job_list",
+            report_schedule_id=report_job["report_schedule_id"],
+        )
+        assert items == [report_job]
+
+    @pytest.mark.parametrize("field", ["frequency", "user_roles", "emails"])
+    def test_validation(self, field, faker, report_schedule):
+        data = dict(
+            report_type="general",
+            frequency="monthly",
+            user_roles="member",
+            emails=faker.email(),
+            report_schedule_id=report_schedule["id"],
+        )
+        data.pop(field)
+
+        with pytest.raises(tk.ValidationError) as err:
+            call_action("datavic_reporting_job_create", **data)
+
+        assert field in err.value.error_dict
+
+
+@pytest.mark.usefixtures("with_plugins", "clean_db", "with_request_context")
+class TestJobList:
+    def test_missing_id(self):
+        with pytest.raises(tk.ValidationError):
+            call_action("datavic_reporting_job_list")
+
+    def test_list_not_real(self):
+        result = call_action(
+            "datavic_reporting_job_list", report_schedule_id="not-real"
+        )
+        assert result == []
+
+    def test_list_empty(self, report_schedule):
+        result = call_action(
+            "datavic_reporting_job_list",
+            report_schedule_id=report_schedule["id"],
+        )
+        assert result == []
+
+    def test_all(self, report_job_factory, report_schedule):
+        first = report_job_factory(id=report_schedule["id"])
+        seond = report_job_factory(id=report_schedule["id"])
+        report_job_factory()
+
+        result = call_action(
+            "datavic_reporting_job_list",
+            report_schedule_id=report_schedule["id"],
+        )
+        assert len(result) == 2

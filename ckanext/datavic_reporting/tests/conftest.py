@@ -71,15 +71,12 @@ class ReportJobFactory(factory.Factory):
     class Meta:
         model = ReportJob
 
-    # report_type = "general"
-    # org_id = factory.LazyFunction(lambda: OrganizationFactory()["id"])
-    # user_id = factory.LazyFunction(lambda: SysadminFactory()["id"])
-    # sub_org_ids = None
-    # frequency = "daily"
-    # user_roles = "admin"
-    # emails = factory.Faker("email")
-    # state = "active"
-    # last_completed = None
+    id = factory.LazyFunction(lambda: ReportScheduleFactory()["id"])
+    org_id = factory.LazyFunction(lambda: OrganizationFactory()["id"])
+
+    frequency = "daily"
+    user_roles = "admin"
+    emails = factory.Faker("email")
 
     @classmethod
     def _build(cls, target_class, *args, **kwargs):
@@ -91,7 +88,6 @@ class ReportJobFactory(factory.Factory):
             assert False, "Positional args aren't supported, use keyword args."
 
         context = {"user": factories._get_action_user_name(kwargs)}
-
         return helpers.call_action(
-            "report_job_create", context=context, **kwargs
+            "datavic_reporting_job_create", context=context, **kwargs
         )

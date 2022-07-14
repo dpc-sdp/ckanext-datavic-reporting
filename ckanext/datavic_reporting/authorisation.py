@@ -65,7 +65,7 @@ def datavic_reporting_schedule_list(context, data_dict):
     }
 
 
-def report_jobs(context, data_dict):
+def datavic_reporting_job_list(context, data_dict):
     if authz.is_authorized_boolean("sysadmin", context):
         return {"success": True}
     return {
