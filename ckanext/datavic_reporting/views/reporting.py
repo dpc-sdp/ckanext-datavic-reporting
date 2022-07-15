@@ -1,6 +1,7 @@
 # encoding: utf-8
 import json
 import logging
+import calendar
 from datetime import datetime
 
 import ckan.plugins.toolkit as toolkit
@@ -46,13 +47,25 @@ def reports():
     return render("user/reports.html", extra_vars=extra_vars)
 
 
+def _get_year_month(year, month):
+    now = datetime.now()
+
+    if not year:
+        year = now.year
+
+    if not month:
+        month = now.month
+
+    return int(year), int(month)
+
+
 def reports_general_year_month():
-    year, month = helpers.get_year_month(
+    year, month = _get_year_month(
         toolkit.request.args.get("report_date_year", None),
         toolkit.request.args.get("report_date_month", None),
     )
 
-    start_date, end_date = helpers.get_report_date_range(year, month)
+    start_date, end_date = _get_report_date_range(year, month)
     organisation = toolkit.request.args.get("organisation", None)
     sub_organisation = toolkit.request.args.get(
         "sub_organisation", "all-sub-organisations"
@@ -65,6 +78,15 @@ def reports_general_year_month():
         if sub_organisation == "all-sub-organisations"
         else sub_organisation,
     )
+
+
+def _get_report_date_range(year, month):
+    month_range = calendar.monthrange(year, month)
+
+    start_date = datetime(year, month, 1).strftime("%Y-%m-%d")
+    end_date = datetime(year, month, month_range[1]).strftime("%Y-%m-%d")
+
+    return start_date, end_date
 
 
 def reports_general_date_range():
@@ -87,7 +109,7 @@ def reports_general_date_range():
 def reports_sub_organisations():
     organisation_id = toolkit.request.args.get("organisation_id", None)
 
-    return json.dumps(helpers.get_organisation_node_tree(organisation_id))
+    return json.dumps(helpers.organisation_tree(organisation_id))
 
 
 def register_datavic_reporting_plugin_rules(blueprint):

@@ -3,135 +3,135 @@
 
 {% block primary_content_inner %}
 
-{% set years, current_year = h.user_report_get_years() %}
-{% set months, current_month = h.user_report_get_months() %}
-{% set organisations = h.get_report_schedule_organisation_list() %}
-{% set frequencies = h.get_scheduled_report_frequencies_list() %}
-{% asset 'datavic_reporting/reporting' %}
+    {% set years, current_year = h.datavic_reporting_get_years() %}
+    {% set months, current_month = h.datavic_reporting_get_months() %}
+    {% set organisations = h.datavic_reporting_schedule_organizations() %}
+    {% set frequencies = h.datavic_reporting_schedule_frequencies() %}
+    {% asset 'datavic_reporting/reporting' %}
 
-<div id="datavic_reporting">
-  <form action="/dashboard/report-schedule/{% if c.action == 'update' and data and data['id'] %}update/{{ data['id'] }}{% else %}create{% endif %}" method="post" class="form-horizontal">
-    <h3>{% if c.action == 'update'%}Update{% else %}Create{% endif %} report schedule</h3>
+    <div id="datavic_reporting">
+        <form action="/dashboard/report-schedule/{% if c.action == 'update' and data and data['id'] %}update/{{ data['id'] }}{% else %}create{% endif %}" method="post" class="form-horizontal">
+            <h3>{% if c.action == 'update'%}Update{% else %}Create{% endif %} report schedule</h3>
 
-    {% if c.action != 'update' %}
-    {{ form.select(
-      name='report_type',
-      id='report_schedule_report_type',
-      label=_('Report type'),
-      options=[
-        {'text': 'General Report', 'value': 'general'}
-      ],
-      selected=data.report_type if data else 'general',
-      error=errors.report_type if errors else None
-    ) }}
+            {% if c.action != 'update' %}
+                {{ form.select(
+                    name='report_type',
+                    id='report_schedule_report_type',
+                    label=_('Report type'),
+                    options=[
+                        {'text': 'General Report', 'value': 'general'}
+                    ],
+                    selected=data.report_type if data else 'general',
+                    error=errors.report_type if errors else None
+                ) }}
 
-    {{ form.select(
-      'org_id',
-      id='general_date_range_organisations',
-      label=_('Organisations'), options=organisations,
-      selected=data.org_id if data and data.org_id else '',
-      error=errors.org_id if errors and errors.org_id else None
-    ) }}
+                {{ form.select(
+                    'org_id',
+                    id='general_date_range_organisations',
+                    label=_('Organisations'), options=organisations,
+                    selected=data.org_id if data and data.org_id else '',
+                    error=errors.org_id if errors and errors.org_id else None
+                ) }}
 
-    {{ form.select('sub_org_ids', id='general_date_range_sub_organisations', label=_('Sub Organisations')) }}
-    {% endif %}
-
-    {{ form.select(
-      name='frequency',
-      id='report_schedule_frequency',
-      label=_('Frequency'),
-      options=frequencies,
-      selected=data.frequency if data else None,
-      error=errors.frequency if errors else None
-    ) }}
-
-    {{ form.select(
-      name='user_roles',
-      id='report_schedule_user_roles',
-      label=_('User role'),
-      options=[
-        {'text': 'Admin', 'value': 'admin'},
-        {'text': 'Editor', 'value': 'editor'}
-      ],
-      selected=data.user_roles if data else 'admin',
-      error=errors.user_roles if errors else None
-    ) }}
-
-    {{ form.textarea('emails', label=_('Emails'), value=data.emails if data else None, error=errors.emails if errors else None) }}
-
-    <button class="btn btn-primary">{% if c.action == 'update'%}Update{% else %}Create{% endif %}</button>
-
-  </form>
-</div>
-
-<hr />
-<div>
-  <h3>Reports scheduled</h3>
-  {% set schedules = h.get_report_schedules() %}
-  {% if not schedules %}
-    <p>There are no reports scheduled.</p>
-  {% else %}
-    <small>
-    <table class="table table-bordered table-striped table-condensed">
-      <thead>
-        <tr>
-          <th width="9%">Report type</th>
-          <th>Organisation</th>
-          <th>Sub-organisations</th>
-          <th width="8%">Frequency</th>
-          <th width="7%">User role</th>
-          <th width="10%">Emails</th>
-          <th width="6%">State</th>
-          <th width="18%">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-      {% for schedule in schedules %}
-        <tr>
-          <td>{{ schedule.report_type[0]|upper }}{{ schedule.report_type[1:] }}</td>
-          <td>
-            {% for org in organisations %}
-              {% if org.value == schedule.org_id %}
-                {{ org.text }}
-              {% endif %}
-            {% endfor %}
-          </td>
-          <td>
-            {% if schedule.sub_org_ids %}
-              {% set sub_org_ids = schedule.sub_org_ids.split(',') %}
-              {% for sub_org in sub_org_ids %}
-                {{ sub_org }}
-              {% endfor %}
-            {% else %}
-              -
+                {{ form.select('sub_org_ids', id='general_date_range_sub_organisations', label=_('Sub Organisations')) }}
             {% endif %}
-          </td>
-          <td>{{ schedule.frequency[0]|upper }}{{ schedule.frequency[1:] }}</td>
-          <td>
-            {{ schedule.user_roles[0]|upper }}{{ schedule.user_roles[1:] }}
-          </td>
-          <td>
-            {% if schedule.emails %}
-              {{ schedule.emails }}
-            {% else %}
-              -
-            {% endif %}
-          </td>
-          <td>
-            {{ schedule.state[0]|upper }}{{ schedule.state[1:] }}
-          </td>
-          <td>
-            <a href="{{ h.url_for('scheduling.update', id=schedule.id ) }}" class="btn btn-small btn-warning">Edit</a>
-            {% if schedule.state != 'deleted' %}
-              <a href="{{ h.url_for('scheduling.delete', id=schedule.id ) }}" class="btn btn-small btn-danger">Delete</a>
-            {% endif %}
-            <a href="{{ h.url_for('scheduling.jobs', id=schedule.id ) }}" class="btn btn-small">Jobs</a>
-          </td>
-        </tr>
-      {% endfor %}
-      </tbody>
-    </table>
-      </small>
-  {% endif %}
-</div>
+
+            {{ form.select(
+                name='frequency',
+                id='report_schedule_frequency',
+                label=_('Frequency'),
+                options=frequencies,
+                selected=data.frequency if data else None,
+                error=errors.frequency if errors else None
+            ) }}
+
+            {{ form.select(
+                name='user_roles',
+                id='report_schedule_user_roles',
+                label=_('User role'),
+                options=[
+                    {'text': 'Admin', 'value': 'admin'},
+                    {'text': 'Editor', 'value': 'editor'}
+                ],
+                selected=data.user_roles if data else 'admin',
+                error=errors.user_roles if errors else None
+            ) }}
+
+            {{ form.textarea('emails', label=_('Emails'), value=data.emails if data else None, error=errors.emails if errors else None) }}
+
+            <button class="btn btn-primary">{% if c.action == 'update'%}Update{% else %}Create{% endif %}</button>
+
+        </form>
+    </div>
+
+    <hr />
+    <div>
+        <h3>Reports scheduled</h3>
+        {% set schedules = h.datavic_reporting_report_schedules() %}
+        {% if not schedules %}
+            <p>There are no reports scheduled.</p>
+        {% else %}
+            <small>
+                <table class="table table-bordered table-striped table-condensed">
+                    <thead>
+                        <tr>
+                            <th width="9%">Report type</th>
+                            <th>Organisation</th>
+                            <th>Sub-organisations</th>
+                            <th width="8%">Frequency</th>
+                            <th width="7%">User role</th>
+                            <th width="10%">Emails</th>
+                            <th width="6%">State</th>
+                            <th width="18%">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for schedule in schedules %}
+                            <tr>
+                                <td>{{ schedule.report_type[0]|upper }}{{ schedule.report_type[1:] }}</td>
+                                <td>
+                                    {% for org in organisations %}
+                                        {% if org.value == schedule.org_id %}
+                                            {{ org.text }}
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    {% if schedule.sub_org_ids %}
+                                        {% set sub_org_ids = schedule.sub_org_ids.split(',') %}
+                                        {% for sub_org in sub_org_ids %}
+                                            {{ sub_org }}
+                                        {% endfor %}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>{{ schedule.frequency[0]|upper }}{{ schedule.frequency[1:] }}</td>
+                                <td>
+                                    {{ schedule.user_roles[0]|upper }}{{ schedule.user_roles[1:] }}
+                                </td>
+                                <td>
+                                    {% if schedule.emails %}
+                                        {{ schedule.emails }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ schedule.state[0]|upper }}{{ schedule.state[1:] }}
+                                </td>
+                                <td>
+                                    <a href="{{ h.url_for('scheduling.update', id=schedule.id ) }}" class="btn btn-small btn-warning">Edit</a>
+                                    {% if schedule.state != 'deleted' %}
+                                        <a href="{{ h.url_for('scheduling.delete', id=schedule.id ) }}" class="btn btn-small btn-danger">Delete</a>
+                                    {% endif %}
+                                    <a href="{{ h.url_for('scheduling.jobs', id=schedule.id ) }}" class="btn btn-small">Jobs</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </small>
+        {% endif %}
+    </div>
 {% endblock %}

@@ -285,7 +285,7 @@ def organisation_members(context, data_dict):
 
     # For authenticated users who are an admin of at least one organisation
     # only show members of organisations they are an admin of
-    user = helpers.get_user()
+    user = context["model"].User.get(context["user"])
 
     authenticated_member = aliased(Member, name="authenticated_member")
     authenticated_user = aliased(User, name="authenticated_user")

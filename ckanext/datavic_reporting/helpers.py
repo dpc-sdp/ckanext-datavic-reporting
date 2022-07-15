@@ -1,4 +1,3 @@
-import calendar
 import csv
 import datetime
 import logging
@@ -16,8 +15,11 @@ from dateutil import parser
 from flask import send_from_directory
 
 from ckanext.datavic_reporting.model import GroupTreeNode
-
+from ckanext.toolbelt.decorators import Collector
 from .logic import auth
+
+
+helper, get_helpers = Collector("datavic_reporting").split()
 
 config = toolkit.config
 log = logging.getLogger(__name__)
@@ -43,7 +45,8 @@ def get_username():
         pass
 
 
-def user_report_get_years():
+@helper
+def get_years():
     now = datetime.datetime.now()
     years = []
     current_year = int(now.strftime("%Y"))
@@ -55,7 +58,8 @@ def user_report_get_years():
     return years, current_year
 
 
-def user_report_get_months():
+@helper
+def get_months():
     now = datetime.datetime.now()
     months = []
     for i in range(1, 13):
@@ -69,60 +73,36 @@ def user_report_get_months():
     return months, now.strftime("%m")
 
 
-def get_year_month(year, month):
-    now = datetime.datetime.now()
-
-    if not year:
-        year = now.year
-
-    if not month:
-        month = now.month
-
-    return int(year), int(month)
-
-
-def get_report_date_range(year, month):
-    month_range = calendar.monthrange(year, month)
-
-    start_date = datetime.datetime(year, month, 1).strftime("%Y-%m-%d")
-    end_date = datetime.datetime(year, month, month_range[1]).strftime(
-        "%Y-%m-%d"
-    )
-
-    return start_date, end_date
-
-
-def get_organisation_list():
-    organisations = []
-    top_level_organisations = get_top_level_organisation_list()
+@helper
+def organisations():
+    orgs = []
+    top_level_organisations = _get_top_level_orgs()
     if not toolkit.request or toolkit.h.check_access("sysadmin"):
-        organisations = top_level_organisations
+        orgs = top_level_organisations
     elif auth.has_user_permission_for_some_org(get_username(), "admin"):
-        for user_organisation in get_organisation_list_for_user("admin"):
-            organisations.append(
+        for user_organisation in _orgs_for_user("admin"):
+            orgs.append(
                 {
                     "value": user_organisation.get("name"),
                     "text": user_organisation.get("display_name"),
                 }
             )
 
-    organisations.insert(
-        0, {"value": "all-organisations", "text": "All Organisations"}
-    )
-    return organisations
+    orgs.insert(0, {"value": "all-organisations", "text": "All Organisations"})
+    return orgs
 
 
-def get_top_level_organisation_list():
-    organisations = []
+def _get_top_level_orgs():
+    orgs = []
     for organisation in model.Group.get_top_level_groups("organization"):
-        organisations.append(
+        orgs.append(
             {"value": organisation.name, "text": organisation.display_name}
         )
 
-    return organisations
+    return orgs
 
 
-def get_organisation_list_for_user(permission):
+def _orgs_for_user(permission):
     try:
         return toolkit.get_action("organization_list_for_user")(
             get_context(), {"permission": permission}
@@ -141,7 +121,7 @@ def get_organisation(organisation_name):
     return model.Group.get(organisation_name)
 
 
-def get_organisation_children(organisation_name):
+def _organisation_children(organisation_name):
     organisation = get_organisation(organisation_name)
     if not organisation:
         return []
@@ -159,10 +139,10 @@ def get_organisation_children_names(organisation_name):
                 group_name,
                 group_title,
                 parent_id,
-            ) in get_organisation_children(organisation_name):
+            ) in _organisation_children(organisation_name):
                 organisation_names.append(group_name)
     elif auth.has_user_permission_for_some_org(get_username(), "admin"):
-        user_organisations = get_organisation_list_for_user("admin")
+        user_organisations = _orgs_for_user("admin")
         if organisation_name == "all-organisations":
             for user_organisation in user_organisations:
                 organisation_names.append(user_organisation.get("name"))
@@ -173,7 +153,7 @@ def get_organisation_children_names(organisation_name):
                 group_name,
                 group_title,
                 parent_id,
-            ) in get_organisation_children(organisation_name):
+            ) in _organisation_children(organisation_name):
                 for user_organisation in user_organisations:
                     if user_organisation.get("name") == group_name:
                         organisation_names.append(group_name)
@@ -181,7 +161,7 @@ def get_organisation_children_names(organisation_name):
     return organisation_names
 
 
-def get_organisation_node(organisation_name):
+def _org_node(organisation_name):
     organisation = get_organisation(organisation_name)
     if not organisation:
         return None
@@ -203,20 +183,21 @@ def get_organisation_node(organisation_name):
     return root_node
 
 
-def get_organisation_node_tree(organisation_name):
+@helper
+def organisation_tree(organisation_name):
     organisation_children = []
     if not organisation_name:
         return organisation_children
-    root_node = get_organisation_node(organisation_name)
+    root_node = _org_node(organisation_name)
     if not root_node:
         return organisation_children
 
-    user_organisations = get_organisation_list_for_user("admin")
-    buildOrganisationTree(user_organisations, organisation_children, root_node)
+    user_organisations = _orgs_for_user("admin")
+    _build_org_tree(user_organisations, organisation_children, root_node)
     return organisation_children
 
 
-def has_access_to_organisation(user_organisations, organisation_name):
+def _has_access_to_organisation(user_organisations, organisation_name):
     for user_organisation in user_organisations:
         if (
             user_organisation.get("name") == organisation_name
@@ -227,12 +208,12 @@ def has_access_to_organisation(user_organisations, organisation_name):
     return False
 
 
-def buildOrganisationTree(
+def _build_org_tree(
     user_organisations, organisation_tree, organisation, ansestors=0
 ):
     dashes = "-" * ansestors
     text = dashes + str(organisation["title"])
-    has_access = has_access_to_organisation(
+    has_access = _has_access_to_organisation(
         user_organisations, organisation["id"]
     )
     tree_node = {
@@ -244,7 +225,7 @@ def buildOrganisationTree(
     if len(organisation["children"]) > 0:
         ansestors += 1
         for child_organisation in organisation["children"]:
-            buildOrganisationTree(
+            _build_org_tree(
                 user_organisations,
                 organisation_tree,
                 child_organisation,
@@ -254,7 +235,7 @@ def buildOrganisationTree(
         ansestors = 0
 
 
-def value(dataset_dict, field):
+def _value(dataset_dict, field):
     value = dataset_dict.get(field, "")
     return value.encode("ascii", "ignore").decode("ascii") if value else ""
 
@@ -263,11 +244,7 @@ def format_date(date_value):
     return parser.parse(date_value).strftime("%Y-%m-%d") if date_value else ""
 
 
-def format_bool(dataset_dict, field):
-    return "Yes" if dataset_dict.get(field, False) else "No"
-
-
-def get_package_search(data_dict):
+def _package_search(data_dict):
     try:
         return toolkit.get_action("package_search")(get_context(), data_dict)
     except Exception as e:
@@ -278,7 +255,7 @@ def get_package_search(data_dict):
         return None
 
 
-def get_dataset_data(start_date, end_date, start_offset, organisation_names):
+def _dataset_data(start_date, end_date, start_offset, organisation_names):
     query = []
     if start_date and end_date:
         query.append(
@@ -312,78 +289,81 @@ def get_dataset_data(start_date, end_date, start_offset, organisation_names):
         "rows": 1000,
     }
     log.debug("Package Search Query: {0}".format(data_dict))
-    return get_package_search(data_dict)
+    return _package_search(data_dict)
 
 
-def get_general_report_data(
+def _general_report_data(
     csv_writer, start_date, end_date, start_offset, organisation_names
 ):
     total_results_found = 0
 
-    dataset_data = get_dataset_data(
+    dataset_data = _dataset_data(
         start_date, end_date, start_offset, organisation_names
     )
     if dataset_data:
         total_results_found = dataset_data["count"]
-        write_csv_row(csv_writer, dataset_data["results"])
+        _write_csv_row(csv_writer, dataset_data["results"])
 
     return total_results_found
 
 
-def write_csv_row(csv_writer, dataset_list):
+def _write_csv_row(csv_writer, dataset_list):
     if dataset_list:
         for dataset_dict in dataset_list:
             row = []
-            row.append(value(dataset_dict, "title"))
-            row.append(value(dataset_dict, "extract"))
-            row.append(value(dataset_dict, "notes"))
+            row.append(_value(dataset_dict, "title"))
+            row.append(_value(dataset_dict, "extract"))
+            row.append(_value(dataset_dict, "notes"))
             row.append(
-                value(dataset_dict["organization"], "title")
+                _value(dataset_dict["organization"], "title")
                 if "organization" in dataset_dict
                 and dataset_dict["organization"] != None
                 else ""
             )
             row.append(
                 ", ".join(
-                    [value(group, "title") for group in dataset_dict["groups"]]
+                    [
+                        _value(group, "title")
+                        for group in dataset_dict["groups"]
+                    ]
                 )
                 if "groups" in dataset_dict and dataset_dict["groups"] != None
                 else ""
             )
-            row.append(value(dataset_dict, "agency_program"))
+            row.append(_value(dataset_dict, "agency_program"))
             row.append("No" if dataset_dict.get("private", False) else "Yes")
-            row.append(value(dataset_dict, "workflow_status"))
-            row.append(format_date(value(dataset_dict, "metadata_modified")))
-            row.append(format_date(value(dataset_dict, "metadata_created")))
+            row.append(_value(dataset_dict, "workflow_status"))
+            row.append(format_date(_value(dataset_dict, "metadata_modified")))
+            row.append(format_date(_value(dataset_dict, "metadata_created")))
 
             csv_writer.writerow(row)
 
             for resource in dataset_dict["resources"]:
                 res_list = []
                 res_list.append(
-                    value(resource, "url")
+                    _value(resource, "url")
                     if "url" in resource and resource["url"] != None
                     else ""
                 )
                 res_list.append(
-                    value(resource, "format")
+                    _value(resource, "format")
                     if "format" in resource and resource["format"] != None
                     else ""
                 )
                 res_list.append(
-                    value(resource, "release_date")
+                    _value(resource, "release_date")
                     if "release_date" in resource
                     and resource["release_date"] != None
                     else ""
                 )
                 res_list.append(
-                    value(resource, "period_start")
+                    _value(resource, "period_start")
                     if "period_start" in resource
                     and resource["period_start"] != None
                     else ""
                 )
                 res_list.append(
-                    value(resource, "period_end")
+                    _value(resource, "period_end")
                     if "period_end" in resource
                     and resource["period_end"] != None
                     else ""
@@ -426,7 +406,7 @@ def generate_general_report(
     start_date = format_date(start_date)
     end_date = format_date(end_date)
     organisation_names = get_organisation_children_names(organisation)
-    total_results_found = get_general_report_data(
+    total_results_found = _general_report_data(
         csv_writer, start_date, end_date, 0, organisation_names
     )
     # package_search is hard coded to only return the first 1000 datasets and cannot be changed to return anymore
@@ -438,7 +418,7 @@ def generate_general_report(
         stop = int(math.ceil(total_results_found / 1000.0) * step)
 
         for start_offset in range(start, stop, step):
-            get_general_report_data(
+            _general_report_data(
                 csv_writer,
                 start_date,
                 end_date,
@@ -451,21 +431,23 @@ def clean_params(params):
     return clean_dict(unflatten(tuplize_dict(parse_params(params))))
 
 
-def get_report_schedules(state=None):
+@helper
+def report_schedules(state=None):
     result = toolkit.get_action("datavic_reporting_schedule_list")(
         {}, {"state": state}
     )
     return result
 
 
-def get_report_schedule_organisation_list():
-    organisations = []
-    top_level_organisations = get_top_level_organisation_list()
+@helper
+def schedule_organizations():
+    orgs = []
+    top_level_organisations = _get_top_level_orgs()
     if not toolkit.request or toolkit.h.check_access("sysadmin"):
-        organisations = top_level_organisations
+        orgs = top_level_organisations
 
-    organisations.insert(0, {"value": "", "text": "Please select"})
-    return organisations
+    orgs.insert(0, {"value": "", "text": "Please select"})
+    return orgs
 
 
 def get_organisation_role_emails(context, id, role):
@@ -503,14 +485,6 @@ def download_file(directory, filename):
     )
 
 
-def get_file_type(filename):
-    ctype, encoding = mimetypes.guess_type(filename)
-    if ctype is None or encoding is not None:
-        ctype = "application/octet-stream"
-
-    return ctype
-
-
 def get_scheduled_report_frequencies():
     frequencies = toolkit.config.get(
         "ckan.datavic_reporting.scheduled_reporting_frequencies", []
@@ -518,7 +492,8 @@ def get_scheduled_report_frequencies():
     return [frequency.lower() for frequency in frequencies]
 
 
-def get_scheduled_report_frequencies_list():
+@helper
+def schedule_frequencies():
     frequencies = []
     for frequency in get_scheduled_report_frequencies():
         frequencies.append(
@@ -528,7 +503,8 @@ def get_scheduled_report_frequencies_list():
     return frequencies
 
 
-def display_member_state(member):
+@helper
+def member_state(member):
     state = member.state
     if state == "pending":
         state += (
@@ -573,9 +549,7 @@ def generate_member_report(path, filename, data_dict):
             member.username.encode("ascii", "ignore").decode("ascii"),
             member.email.encode("ascii", "ignore").decode("ascii"),
             member.capacity.encode("ascii", "ignore").decode("ascii"),
-            display_member_state(member)
-            .encode("ascii", "ignore")
-            .decode("ascii"),
+            member_state(member).encode("ascii", "ignore").decode("ascii"),
             tz.localize(member.created).astimezone(
                 pytz.timezone(ckan_timezone)
             ),
@@ -584,7 +558,8 @@ def generate_member_report(path, filename, data_dict):
         csv_writer.writerow(row)
 
 
-def get_user_states():
+@helper
+def user_states():
     return [
         {"text": "All states", "value": ""},
         {"text": "Active", "value": "active"},

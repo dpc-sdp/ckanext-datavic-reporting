@@ -51,17 +51,7 @@ class DataVicReportingPlugin(p.SingletonPlugin):
         """Return a dict of named helper functions (as defined in the ITemplateHelpers interface).
         These helpers will be available under the 'h' thread-local global object.
         """
-        return {
-            "user_report_get_years": helpers.user_report_get_years,
-            "user_report_get_months": helpers.user_report_get_months,
-            "user_report_get_organisations": helpers.get_organisation_list,
-            "get_report_schedules": helpers.get_report_schedules,
-            "get_report_schedule_organisation_list": helpers.get_report_schedule_organisation_list,
-            "get_scheduled_report_frequencies_list": helpers.get_scheduled_report_frequencies_list,
-            "display_member_state": helpers.display_member_state,
-            "get_organisation_node_tree": helpers.get_organisation_node_tree,
-            "get_user_states": helpers.get_user_states,
-        }
+        return dict(helpers.get_helpers(), **{})
 
     # IActions
     def get_actions(self):
