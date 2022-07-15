@@ -1,12 +1,10 @@
 import calendar
 import csv
 import datetime
-import inspect
 import logging
 import math
 import mimetypes
 import os
-import pkgutil
 
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
@@ -15,10 +13,11 @@ from ckan.lib.navl.dictization_functions import unflatten
 from ckan.logic import clean_dict, parse_params, tuplize_dict
 from ckan.views.user import _extra_template_variables
 from dateutil import parser
-from flask import Blueprint, send_from_directory
+from flask import send_from_directory
 
-import ckanext.datavic_reporting.authorisation as authorisation
 from ckanext.datavic_reporting.model import GroupTreeNode
+
+from .logic import auth
 
 config = toolkit.config
 log = logging.getLogger(__name__)
@@ -98,9 +97,7 @@ def get_organisation_list():
     top_level_organisations = get_top_level_organisation_list()
     if not toolkit.request or toolkit.h.check_access("sysadmin"):
         organisations = top_level_organisations
-    elif authorisation.has_user_permission_for_some_org(
-        get_username(), "admin"
-    ):
+    elif auth.has_user_permission_for_some_org(get_username(), "admin"):
         for user_organisation in get_organisation_list_for_user("admin"):
             organisations.append(
                 {
@@ -164,9 +161,7 @@ def get_organisation_children_names(organisation_name):
                 parent_id,
             ) in get_organisation_children(organisation_name):
                 organisation_names.append(group_name)
-    elif authorisation.has_user_permission_for_some_org(
-        get_username(), "admin"
-    ):
+    elif auth.has_user_permission_for_some_org(get_username(), "admin"):
         user_organisations = get_organisation_list_for_user("admin")
         if organisation_name == "all-organisations":
             for user_organisation in user_organisations:
@@ -565,7 +560,7 @@ def generate_member_report(path, filename, data_dict):
 
     csv_writer.writerow(header_row)
 
-    members = toolkit.get_action("organisation_members")(
+    members = toolkit.get_action("datavic_reporting_organisation_members")(
         get_context(), data_dict
     )
 

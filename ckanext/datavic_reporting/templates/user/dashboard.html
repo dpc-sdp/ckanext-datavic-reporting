@@ -11,9 +11,9 @@
           {{ h.build_nav_icon('dashboard.groups', _('My Groups')) }}
           {{ h.build_nav_icon('dashboard.index', _('News feed')) }}
           {% if h.check_access('user_dashboard_reports') %}
-            {{ h.build_nav_icon('reporting.reports', _('Reports')) }}         
+            {{ h.build_nav_icon('reporting.reports', _('Reports')) }}
           {% endif %}
-          {% if h.check_access('user_report_schedules') %}        
+          {% if h.check_access('user_report_schedules') %}
             {{ h.build_nav_icon('scheduling.schedules', _('Report schedules')) }}
           {% endif %}
         </ul>

@@ -6,9 +6,10 @@ import ckan.plugins.toolkit as toolkit
 from flask import Blueprint
 from flask.views import MethodView
 
-import ckanext.datavic_reporting.authorisation as authorisation
 import ckanext.datavic_reporting.helpers as helpers
 from ckanext.datavic_reporting.model import ReportJob, ReportSchedule
+
+from ..logic import auth
 
 get_action = toolkit.get_action
 h = toolkit.h
@@ -24,9 +25,7 @@ scheduling = Blueprint("scheduling", __name__)
 
 @scheduling.before_request
 def _check_user_access():
-    user_report_schedules = authorisation.user_report_schedules(
-        helpers.get_context()
-    )
+    user_report_schedules = auth.user_report_schedules(helpers.get_context())
     if not user_report_schedules or not user_report_schedules.get("success"):
         abort(403, toolkit._("You are not Authorized"))
 
@@ -117,13 +116,14 @@ class ReportSchedulingUpdate(MethodView):
 
 class ReportSchedulingDelete(MethodView):
     def get(self, id):
-        result = toolkit.get_action("report_schedule_delete")(
-            helpers.get_context(), {"id": id}
-        )
-        if result is True:
-            h.flash_success("Report schedule deleted")
-        else:
+        try:
+            toolkit.get_action("datavic_reporting_schedule_delete")(
+                helpers.get_context(), {"id": id}
+            )
+        except (toolkit.ValidationError, toolkit.ObjectNotFound):
             h.flash_error("Error deleting report schedule")
+        else:
+            h.flash_success("Report schedule deleted")
 
         return h.redirect_to("scheduling.schedules")
 

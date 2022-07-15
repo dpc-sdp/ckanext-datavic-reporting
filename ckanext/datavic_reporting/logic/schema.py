@@ -54,6 +54,16 @@ def schedule_update(
 
 
 @validator_args
+def schedule_delete(
+    not_missing,
+    unicode_safe,
+):
+    return {
+        "id": [not_missing, unicode_safe],
+    }
+
+
+@validator_args
 def schedule_list(ignore_missing, unicode_safe):
     return {
         "frequency": [ignore_missing, unicode_safe],
@@ -89,4 +99,14 @@ def job_create(
         "emails": [not_missing, emails_validator],
         "__extras": [ignore],
         "__junk": [ignore],
+    }
+
+
+@validator_args
+def organisation_members(
+    ignore_empty, unicode_safe, json_list_or_string, default
+):
+    return {
+        "organisations": [default("[]"), json_list_or_string],
+        "state": [ignore_empty, unicode_safe],
     }

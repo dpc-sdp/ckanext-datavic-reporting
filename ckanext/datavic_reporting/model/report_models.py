@@ -4,9 +4,7 @@ import datetime
 
 import ckan.model as model
 from ckan.model.types import make_uuid
-
 from sqlalchemy import Column, types
-
 
 from .base import Base
 

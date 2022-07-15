@@ -1,6 +1,5 @@
-import pytest
-
 import ckan.plugins.toolkit as tk
+import pytest
 from ckan.tests.helpers import call_action
 
 
@@ -71,6 +70,27 @@ class TestScheduleUpdate:
             emails=email,
         )
         assert result["emails"] == email
+
+
+@pytest.mark.usefixtures("with_plugins", "clean_db")
+class TestScheduleDelete:
+    def test_missing_id(self):
+        with pytest.raises(tk.ValidationError):
+            call_action("datavic_reporting_schedule_delete")
+
+    def test_invalid_id(self):
+        with pytest.raises(tk.ObjectNotFound):
+            call_action("datavic_reporting_schedule_delete", id="not-real")
+
+    def test_delete(self, report_schedule):
+        result = call_action(
+            "datavic_reporting_schedule_delete",
+            id=report_schedule["id"],
+        )
+        assert result == report_schedule
+
+        items = call_action("datavic_reporting_schedule_list")
+        assert items == []
 
 
 @pytest.mark.usefixtures("with_plugins", "clean_db")

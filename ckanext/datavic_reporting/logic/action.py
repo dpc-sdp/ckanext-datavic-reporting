@@ -3,12 +3,13 @@ from __future__ import annotations
 import datetime
 import logging
 
+import ckan.authz as authz
 import ckan.model as model
+import ckan.plugins.toolkit as tk
 import sqlalchemy
 from ckan.logic import validate
 from ckan.model.group import Group, Member
 from ckan.model.user import User
-import ckan.plugins.toolkit as tk
 from sqlalchemy.orm import aliased
 
 import ckanext.datavic_reporting.constants as constants
@@ -23,6 +24,10 @@ _and_ = sqlalchemy.and_
 _session_ = model.Session
 log = logging.getLogger(__name__)
 
+CONFIG_REPORT_PATH = "ckan.datavic_reporting.scheduled_reports_path"
+
+DEFAULT_REPORT_PATH = "/tmp"
+
 
 action, get_actions = Collector("datavic_reporting").split()
 
@@ -35,7 +40,7 @@ def schedule_create(context, data_dict):
     Args:
         user_id(str, optional): ID of the schedule owner. Defaults to the current user's ID
         report_type(str): At the moment, only `general` type supported
-        userorg_id(str): ID of the organization for reporting
+        org_id(str): ID of the organization for reporting
         sub_org_ids(str, optional): comma-separated list of groups for reporting
         user_roles(str): comma-separated list of user-roles for reporting
         emails(str): comma-separated list of emails for reporting
@@ -86,7 +91,7 @@ def schedule_list(context, data_dict):
 
     Args:
         frequency(str, optional): frequency of reporting
-        frequency(str, optional): state of the report
+        state(str, optional): state of the report
 
     """
     tk.check_access("datavic_reporting_schedule_list", context, {})
@@ -103,6 +108,29 @@ def schedule_list(context, data_dict):
         q = q.filter_by(frequency=frequency)
 
     return [s.as_dict() for s in q]
+
+
+@action
+@tk.side_effect_free
+@validate(schema.schedule_delete)
+def schedule_delete(context, data_dict):
+    tk.check_access("datavic_reporting_schedule_delete", context, data_dict)
+
+    schedule = ReportSchedule.get(data_dict["id"])
+    if not schedule:
+        raise tk.ObjectNotFound()
+
+    reports = tk.get_action("datavic_reporting_job_list")(
+        context, {"report_schedule_id": schedule.id}
+    )
+
+    if reports:
+        schedule.state = "deleted"
+    else:
+        model.Session.delete(schedule)
+    model.Session.commit()
+
+    return schedule.as_dict()
 
 
 @action
@@ -126,9 +154,18 @@ def job_list(context, data_dict):
 @action
 @validate(schema.job_create)
 def job_create(context, data_dict):
-    report_job_path = tk.config.get(
-        "ckan.datavic_reporting.scheduled_reports_path", "/tmp"
-    )
+    """Create a new report job
+
+    Args:
+        id(str): ID of related report schedule
+        org_id(str): ID of the organization for reporting
+        sub_org_ids(str, optional): comma-separated list of groups for reporting
+        user_roles(str): comma-separated list of user-roles for reporting
+        emails(str): comma-separated list of emails for reporting
+        frequency(str): frequency of reporting
+
+    """
+    report_job_path = tk.config.get(CONFIG_REPORT_PATH, DEFAULT_REPORT_PATH)
     sub_org_ids = data_dict.get("sub_org_ids")
     organisation = (
         data_dict.get("org_id")
@@ -137,10 +174,10 @@ def job_create(context, data_dict):
     )
 
     now = datetime.datetime.now()
-    path_date = now.strftime("%Y") + "/" + now.strftime("%m")
-    path = "{0}/{1}/{2}/".format(report_job_path, organisation, path_date)
+    path_date = now.strftime("%Y/%m")
+    path = f"{report_job_path}/{organisation}/{path_date}/"
 
-    filename = "general_report_{0}.csv".format(now.isoformat())
+    filename = f"general_report_{now.isoformat()}.csv"
     file_path = path + filename
 
     report_job_dict = {
@@ -155,6 +192,7 @@ def job_create(context, data_dict):
     report_job = ReportJob(**report_job_dict)
     model.Session.add(report_job)
     model.Session.commit()
+
     helpers.generate_general_report(path, filename, None, None, organisation)
     report_job.status = constants.Statuses.Generated
     model.Session.commit()
@@ -189,130 +227,87 @@ def job_create(context, data_dict):
     return report_job.as_dict()
 
 
-@action("organisation_members")
+@action
+@validate(schema.organisation_members)
 def organisation_members(context, data_dict):
+    """List members of the given organizations
+
+    Args:
+        organisations(list[str], optional): names of organizations
+        state(str, optional): state of users
     """
 
-    :param context:
-    :param data_dict:
-        A list of organisation names
-    :return:
-    """
-    try:
-        base_query = _session_.query(
-            Group.name.label("organisation_name"),
-            User.name.label("username"),
-            User.email,
-            User.state,
-            User.created,
-            User.reset_key,
-            Member.capacity,
+    base_query = _session_.query(
+        Group.name.label("organisation_name"),
+        User.name.label("username"),
+        User.email,
+        User.state,
+        User.created,
+        User.reset_key,
+        Member.capacity,
+    )
+
+    conditions = [
+        Group.type == "organization",
+        Member.table_name == "user",
+        Member.state == "active",
+    ]
+
+    organisations = data_dict["organisations"]
+    state = data_dict.get("state", None)
+
+    if len(organisations) > 0:
+        conditions.append(Group.name.in_(organisations))
+
+    if state == "active":
+        conditions.append(User.state == "active")
+    elif state == "pending_invited":
+        conditions.append(User.state == "pending")
+        conditions.append(User.reset_key != None)
+    elif state == "pending_request":
+        conditions.append(User.state == "pending")
+        conditions.append(User.reset_key == None)
+
+    if authz.is_sysadmin(context["user"]):
+        # Show all members for sysadmin users
+        members = (
+            base_query.filter(_and_(*conditions))
+            .join(Member, Member.group_id == Group.id)
+            .join(User, User.id == Member.table_id)
+            .order_by(Group.name.asc(), User.name.asc())
         )
 
-        conditions = [
-            Group.type == "organization",
-            Member.table_name == "user",
-            Member.state == "active",
-        ]
+        # log.debug(str(members))
 
-        organisations = data_dict.get("organisations", [])
-        state = data_dict.get("state", None)
+        return members.all()
 
-        if len(organisations) > 0:
-            conditions.append(Group.name.in_(organisations))
+    tk.check_access("user_dashboard_reports", context, {})
 
-        if state == "active":
-            conditions.append(User.state == "active")
-        elif state == "pending_invited":
-            conditions.append(User.state == "pending")
-            conditions.append(User.reset_key != None)
-        elif state == "pending_request":
-            conditions.append(User.state == "pending")
-            conditions.append(User.reset_key == None)
+    # For authenticated users who are an admin of at least one organisation
+    # only show members of organisations they are an admin of
+    user = helpers.get_user()
 
-        try:
-            tk.check_access("sysadmin", context, {})
-        except tk.NotAuthorized:
-            is_sysadmin = False
-        else:
-            is_sysadmin = True
+    authenticated_member = aliased(Member, name="authenticated_member")
+    authenticated_user = aliased(User, name="authenticated_user")
 
-        if is_sysadmin:
-            # Show all members for sysadmin users
-            members = (
-                base_query.filter(_and_(*conditions))
-                .join(Member, Member.group_id == Group.id)
-                .join(User, User.id == Member.table_id)
-                .order_by(Group.name.asc(), User.name.asc())
-            )
+    # Only include organisations if authenticated user is an admin
+    conditions.append(authenticated_member.table_name == "user")
+    conditions.append(authenticated_member.capacity == "admin")
+    conditions.append(authenticated_member.table_id == user.id)
+    conditions.append(authenticated_member.state == "active")
 
-            # log.debug(str(members))
-
-            return members.all()
-        else:
-            tk.check_access("user_dashboard_reports", context, {})
-
-            # For authenticated users who are an admin of at least one organisation
-            # only show members of organisations they are an admin of
-            user = helpers.get_user()
-
-            authenticated_member = aliased(Member, name="authenticated_member")
-            authenticated_user = aliased(User, name="authenticated_user")
-
-            # Only include organisations if authenticated user is an admin
-            conditions.append(authenticated_member.table_name == "user")
-            conditions.append(authenticated_member.capacity == "admin")
-            conditions.append(authenticated_member.table_id == user.id)
-            conditions.append(authenticated_member.state == "active")
-
-            return (
-                base_query.filter(_and_(*conditions))
-                .join(Member, Member.group_id == Group.id)
-                .join(User, User.id == Member.table_id)
-                # Only include organisations if authenticated user is an admin
-                .join(
-                    authenticated_member,
-                    authenticated_member.group_id == Group.id,
-                )
-                .join(
-                    authenticated_user,
-                    authenticated_user.id == authenticated_member.table_id,
-                )
-                .order_by(Group.name.asc(), User.name.asc())
-            ).all()
-
-    except Exception as e:
-        log.error(str(e))
-
-
-@action("report_schedule_delete")
-@tk.side_effect_free
-def report_schedule_delete(context, data_dict):
-    error = "Invalid or no report schedule ID provided."
-
-    id = data_dict.get("id", None)
-
-    # Check to make sure `id` looks like a UUID
-    if id and model.is_id(id):
-        try:
-            tk.check_access("report_schedule_delete", context, {"id": id})
-
-            # Load the record
-            schedule = ReportSchedule.get(id)
-            if schedule:
-                # If a schedule has reports - mark it as deleted
-                reports = tk.get_action("datavic_reporting_job_list")(
-                    context, {"report_schedule_id": id}
-                )
-                if reports:
-                    schedule.state = "deleted"
-                    model.Session.add(schedule)
-                # Otherwise delete the report schedule record entirely
-                else:
-                    model.Session.delete(schedule)
-                model.Session.commit()
-                return True
-        except Exception as e:
-            error = str(e)
-
-    return {"errors": error}
+    return (
+        base_query.filter(_and_(*conditions))
+        .join(Member, Member.group_id == Group.id)
+        .join(User, User.id == Member.table_id)
+        # Only include organisations if authenticated user is an admin
+        .join(
+            authenticated_member,
+            authenticated_member.group_id == Group.id,
+        )
+        .join(
+            authenticated_user,
+            authenticated_user.id == authenticated_member.table_id,
+        )
+        .order_by(Group.name.asc(), User.name.asc())
+    ).all()

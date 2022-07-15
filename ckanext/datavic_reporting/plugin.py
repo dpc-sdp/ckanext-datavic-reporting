@@ -3,12 +3,11 @@ import logging
 import ckan.plugins as p
 import ckan.plugins.toolkit as tk
 
-import ckanext.datavic_reporting.authorisation as authorisation
 import ckanext.datavic_reporting.helpers as helpers
 from ckanext.datavic_reporting.cli import get_commands
 
 from . import views
-from .logic import action, validators
+from .logic import action, auth, validators
 
 log = logging.getLogger(__name__)
 
@@ -45,17 +44,7 @@ class DataVicReportingPlugin(p.SingletonPlugin):
 
     # IAuthFunctions
     def get_auth_functions(self):
-        return {
-            # !
-            "user_dashboard_reports": authorisation.user_dashboard_reports,
-            # !
-            "user_report_schedules": authorisation.user_report_schedules,
-            "datavic_reporting_schedule_create": authorisation.datavic_reporting_schedule_create,
-            "datavic_reporting_schedule_update": authorisation.datavic_reporting_schedule_update,
-            "report_schedule_delete": authorisation.report_schedule_delete,
-            "datavic_reporting_schedule_list": authorisation.datavic_reporting_schedule_list,
-            "datavic_reporting_job_list": authorisation.datavic_reporting_job_list,
-        }
+        return auth.get_auth_functions()
 
     # ITemplateHelpers
     def get_helpers(self):

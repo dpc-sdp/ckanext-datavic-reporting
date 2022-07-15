@@ -1,9 +1,9 @@
-import pytest
 import factory
+import pytest
+from ckan.tests import factories, helpers
 from pytest_factoryboy import register
 
-from ckan.tests import factories, helpers
-from ckanext.datavic_reporting.model import ReportSchedule, ReportJob
+from ckanext.datavic_reporting.model import ReportJob, ReportSchedule
 
 
 @pytest.fixture

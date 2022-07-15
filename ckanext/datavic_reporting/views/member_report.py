@@ -7,8 +7,9 @@ import ckan.plugins.toolkit as toolkit
 from ckan.common import _
 from flask import Blueprint
 
-import ckanext.datavic_reporting.authorisation as authorisation
 import ckanext.datavic_reporting.helpers as helpers
+
+from ..logic import auth
 
 get_action = toolkit.get_action
 
@@ -23,9 +24,7 @@ member_report = Blueprint("member_report", __name__)
 
 @member_report.before_request
 def check_user_access():
-    user_dashboard_reports = authorisation.user_dashboard_reports(
-        helpers.get_context()
-    )
+    user_dashboard_reports = auth.user_dashboard_reports(helpers.get_context())
     if not user_dashboard_reports or not user_dashboard_reports.get("success"):
         abort(403, toolkit._("You are not Authorized"))
 
@@ -84,9 +83,9 @@ def report():
         return download_report(data_dict)
     else:
         if data_dict["organisation"]:
-            data_dict["members"] = toolkit.get_action("organisation_members")(
-                {}, data_dict
-            )
+            data_dict["members"] = toolkit.get_action(
+                "datavic_reporting_organisation_members"
+            )({}, data_dict)
 
     return render("member/report.html", extra_vars=data_dict)
 
