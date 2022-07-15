@@ -7,7 +7,6 @@ import smtplib
 import socket
 from email import encoders, utils
 from email.header import Header
-from email.message import Message
 from email.mime.audio import MIMEAudio
 from email.mime.base import MIMEBase
 from email.mime.image import MIMEImage
@@ -27,6 +26,7 @@ class MailerException(Exception):
     pass
 
 
+
 def _mail_recipient(
     recipient_name,
     recipient_email,
@@ -38,7 +38,8 @@ def _mail_recipient(
     headers=None,
     attachments=[],
 ):
-
+    """Port of v2.10 version that supports file attachments.
+    """
     if not headers:
         headers = {}
 
