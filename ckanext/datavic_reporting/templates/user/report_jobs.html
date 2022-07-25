@@ -1,61 +1,61 @@
 {% extends "user/dashboard.html" %}
 
 {% block primary_content_inner %}
-<div>
-  <h3>Report jobs</h3>
-  {% if not jobs %}
-    <p>There are no report jobs.</p>
-  {% else %}
-    <small>
-        <table class="table table-bordered table-striped table-condensed">
-          <thead>
-            <tr>
-              <th width="8%">ID</th>
-              <th width="10%">Timestamp</th>
-              <th width="10%">Report type</th>
-              <th width="10%">Frequency</th>
-              <th width="10%">User role</th>
-              <th width="10%">Emails</th>
-              <th width="12%">Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-          {% for job in jobs %}
-            <tr>
-              <td><span title="{{ job['id'] }}">{{ job['id'][:3] }}...{{ job['id'][-3:] }}</span></td>
-              <td>{{ h.render_datetime(job.timestamp, date_format='%Y-%m-%d %H:%M') }}</td>
-              <td>{{ schedule.report_type[0]|upper }}{{ schedule.report_type[1:] }}</td>
-              <td>
-                {% if job.frequency %}
-                  {{ job.frequency[0]|upper }}{{ job.frequency[1:] }}
-                {% else %}
-                  -
-                {% endif %}
-              </td>
-              <td>
-                {% if job.user_roles %}
-                  {{ job.user_roles[0]|upper }}{{ job.user_roles[1:] }}
-                {% else %}
-                  -
-                {% endif %}
-              </td>
-              <td>
-                {% if job.emails %}
-                  {{ job.emails }}
-                {% else %}
-                  -
-                {% endif %}
-              </td>
-              <td>{{ job['status'] }}</td>
-              <td>
-                <a href="{{ h.url_for('scheduling.job_download', id=job.id ) }}" class="btn btn-small">Download</a>
-              </td>
-            </tr>
-          {% endfor %}
-          </tbody>
-        </table>
-      </small>
-  {% endif %}
-</div>
+    <div>
+        <h3>Report jobs</h3>
+        {% if not jobs %}
+            <p>There are no report jobs.</p>
+        {% else %}
+            <small>
+                <table class="table table-bordered table-striped table-condensed">
+                    <thead>
+                        <tr>
+                            <th width="8%">ID</th>
+                            <th width="10%">Timestamp</th>
+                            <th width="10%">Report type</th>
+                            <th width="10%">Frequency</th>
+                            <th width="10%">User role</th>
+                            <th width="10%">Emails</th>
+                            <th width="12%">Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in jobs %}
+                            <tr>
+                                <td><span title="{{ job['id'] }}">{{ job['id'][:3] }}...{{ job['id'][-3:] }}</span></td>
+                                <td>{{ h.render_datetime(job.timestamp, date_format='%Y-%m-%d %H:%M') }}</td>
+                                <td>{{ schedule.report_type[0]|upper }}{{ schedule.report_type[1:] }}</td>
+                                <td>
+                                    {% if job.frequency %}
+                                        {{ job.frequency[0]|upper }}{{ job.frequency[1:] }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if job.user_roles %}
+                                        {{ job.user_roles[0]|upper }}{{ job.user_roles[1:] }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if job.emails %}
+                                        {{ job.emails }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>{{ job['status'] }}</td>
+                                <td>
+                                    <a href="{{ h.url_for('scheduling.job_download', id=job.id ) }}" class="btn btn-small">Download</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </small>
+        {% endif %}
+    </div>
 {% endblock %}

@@ -3,40 +3,40 @@
 
 {% block primary_content_inner %}
 
-{% set years, current_year = h.user_report_get_years() %}
-{% set months, current_month = h.user_report_get_months() %}
-{% set organisations = h.user_report_get_organisations() %}
-{% asset 'datavic_reporting/reporting' %}
+    {% set years, current_year = h.datavic_reporting_get_years() %}
+    {% set months, current_month = h.datavic_reporting_get_months() %}
+    {% set organisations = h.datavic_reporting_organisations() %}
+    {% asset 'datavic_reporting/reporting' %}
 
-<div id="datavic_reporting">
-  <form action="/user/reports/general_date_range" method="get" class="report form-horizontal">
-    <h3>General Report Date Range</h3>
+    <div id="datavic_reporting">
+        <form action="/user/reports/general_date_range" method="get" class="report form-horizontal">
+            <h3>General Report Date Range</h3>
 
-    {{ form.input('report_date_from', label=_('Date From'), type='date') }}
+            {{ form.input('report_date_from', label=_('Date From'), type='date') }}
 
-    {{ form.input('report_date_to', label=_('Date To'), type='date') }}
+            {{ form.input('report_date_to', label=_('Date To'), type='date') }}
 
-    {{ form.select('organisation', id='general_date_range_organisations', label=_('Organisations'), options=organisations) }}
+            {{ form.select('organisation', id='general_date_range_organisations', label=_('Organisations'), options=organisations) }}
 
-    {{ form.select('sub_organisation', id='general_date_range_sub_organisations', label=_('Sub Organisations')) }}
+            {{ form.select('sub_organisation', id='general_date_range_sub_organisations', label=_('Sub Organisations')) }}
 
-    <button class="btn btn-primary">Download</button>
+            <button class="btn btn-primary">Download</button>
 
-  </form>
+        </form>
 
-  <form id="general_year_month" action="/user/reports/general_year_month" method="get" class="report form-horizontal">
-    <h3>General Report Month of the Year</h3>
+        <form id="general_year_month" action="/user/reports/general_year_month" method="get" class="report form-horizontal">
+            <h3>General Report Month of the Year</h3>
 
-    {{ form.select('report_date_year', label=_('Year'), options=years, selected=current_year) }}
+            {{ form.select('report_date_year', label=_('Year'), options=years, selected=current_year) }}
 
-    {{ form.select('report_date_month', label=_('Month'), options=months, selected=current_month) }}
+            {{ form.select('report_date_month', label=_('Month'), options=months, selected=current_month) }}
 
-    {{ form.select('organisation', id='general_year_month_organisations', label=_('Organisations'), options=organisations) }}
+            {{ form.select('organisation', id='general_year_month_organisations', label=_('Organisations'), options=organisations) }}
 
-    {{ form.select('sub_organisation', id='general_year_month_sub_organisations', label=_('Sub Organisations')) }}
+            {{ form.select('sub_organisation', id='general_year_month_sub_organisations', label=_('Sub Organisations')) }}
 
-    <button class="btn btn-primary">Download</button>
+            <button class="btn btn-primary">Download</button>
 
-  </form>
-</div>
+        </form>
+    </div>
 {% endblock %}
