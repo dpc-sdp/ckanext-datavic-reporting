@@ -240,6 +240,10 @@ def _value(dataset_dict, field):
     return value.encode("ascii", "ignore").decode("ascii") if value else ""
 
 
+def _markdown_extract(value: str) -> str:
+    return toolkit.h.markdown_extract(value)
+
+
 def format_date(date_value):
     return parser.parse(date_value).strftime("%Y-%m-%d") if date_value else ""
 
@@ -313,7 +317,7 @@ def _write_csv_row(csv_writer, dataset_list):
             row = []
             row.append(_value(dataset_dict, "title"))
             row.append(_value(dataset_dict, "extract"))
-            row.append(_value(dataset_dict, "notes"))
+            row.append(_markdown_extract(_value(dataset_dict, "notes")))
             row.append(
                 _value(dataset_dict["organization"], "title")
                 if "organization" in dataset_dict
