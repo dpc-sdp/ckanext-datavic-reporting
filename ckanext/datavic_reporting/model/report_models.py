@@ -2,16 +2,17 @@ from __future__ import annotations
 
 import datetime
 
-import ckan.model as model
-from ckan.model.types import make_uuid
 from sqlalchemy import Column, types
 
-from .base import Base
+import ckan.model as model
+import ckan.plugins.toolkit as tk
+from ckan.model.types import make_uuid
+
 
 log = __import__("logging").getLogger(__name__)
 
 
-class ReportSchedule(Base):
+class ReportSchedule(tk.BaseModel):
     __tablename__ = "report_schedule"
 
     id = Column(types.UnicodeText, primary_key=True, default=make_uuid)
@@ -48,7 +49,7 @@ class ReportSchedule(Base):
         }
 
 
-class ReportJob(Base):
+class ReportJob(tk.BaseModel):
     __tablename__ = "report_job"
 
     id = Column(types.UnicodeText, primary_key=True, default=make_uuid)

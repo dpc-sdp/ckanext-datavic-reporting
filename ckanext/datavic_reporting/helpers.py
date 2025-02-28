@@ -485,7 +485,7 @@ def download_file(directory, filename):
         filename,
         mimetype="text/csv",
         as_attachment=True,
-        attachment_filename=filename,
+        download_name=filename,
     )
 
 
